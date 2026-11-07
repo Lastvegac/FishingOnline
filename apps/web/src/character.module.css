@@ -1,0 +1,121 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(350px, 1.1fr);
+  gap: var(--space-6);
+  align-items: start;
+  margin-top: var(--space-6);
+}
+.previewColumn {
+  position: sticky;
+  top: var(--space-4);
+  min-width: 0;
+}
+.editor {
+  min-width: 0;
+  display: grid;
+  gap: var(--space-4);
+}
+.editor > form {
+  display: grid;
+  gap: var(--space-4);
+}
+.grid,
+.filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+.presets {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-2);
+}
+.presets button {
+  text-align: left;
+  justify-content: start;
+}
+.presets small {
+  display: block;
+  font-weight: 400;
+  margin-top: var(--space-1);
+  line-height: 1.5;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-block: var(--space-2);
+}
+.selected {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+.previewSettings {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) auto;
+  gap: var(--space-3);
+  align-items: center;
+  margin-top: var(--space-3);
+}
+.hint {
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+.catalogGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: var(--space-3);
+}
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.card > * {
+  min-width: 0;
+  max-width: 100%;
+}
+.card h3,
+.card h4,
+.card p,
+.card > .row {
+  margin: 0;
+}
+.card p {
+  font-size: 0.875rem;
+}
+.card > .row:last-child {
+  margin-top: auto;
+}
+.card > .catalogGrid {
+  width: 100%;
+}
+.row,
+.row > :global(.fwo-button) {
+  max-width: 100%;
+}
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .previewColumn {
+    position: static;
+  }
+}
+@media (max-width: 480px) {
+  .grid,
+  .filters {
+    grid-template-columns: 1fr;
+  }
+  .previewSettings {
+    grid-template-columns: 1fr;
+  }
+}
+
+.presetPortrait {
+  display: block;
+  width: 60px;
+  min-width: 60px;
+}

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- color-brand-primary -->
+  <rect width="512" height="512" rx="112" fill="#ffcd17"/>
+  <!-- color-neutral-9 -->
+  <path d="M120 280c60-90 190-110 272-30-82 80-212 60-272-30ZM120 280 64 236v88Z" fill="#0a0a0a"/>
+  <!-- color-brand-primary -->
+  <circle cx="330" cy="262" r="14" fill="#ffcd17"/>
+</svg>

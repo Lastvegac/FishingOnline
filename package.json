@@ -1,0 +1,42 @@
+{
+  "name": "fishing-world-online",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.29.3",
+  "engines": {
+    "node": ">=22.13.0",
+    "pnpm": ">=10"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n api,web,admin -c green,cyan,yellow \"pnpm --filter @fwo/api dev\" \"pnpm --filter @fwo/web dev\" \"pnpm --filter @fwo/admin dev\"",
+    "build": "pnpm -r --if-present build",
+    "typecheck": "pnpm -r --if-present typecheck && tsc -p tsconfig.tools.json --noEmit",
+    "lint": "eslint . && pnpm lint:colors",
+    "lint:colors": "node infrastructure/scripts/lint-colors.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "pnpm -r --if-present test",
+    "test:integration": "node infrastructure/scripts/test-database.mjs prepare-integration && pnpm --filter @fwo/api test:integration",
+    "test:e2e": "playwright test",
+    "db:generate": "pnpm --filter @fwo/api db:generate",
+    "db:migrate": "pnpm --filter @fwo/api db:migrate",
+    "db:seed": "pnpm --filter @fwo/api db:seed",
+    "infra:up": "docker compose -f infrastructure/docker/compose.yaml up -d",
+    "infra:down": "docker compose -f infrastructure/docker/compose.yaml down",
+    "services:local": "node infrastructure/scripts/local-postgres.mjs",
+    "test:db:cleanup": "node infrastructure/scripts/test-database.mjs cleanup"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.56.1",
+    "@types/node": "^22.19.0",
+    "concurrently": "^9.2.1",
+    "eslint": "^10.14.0",
+    "globals": "^16.5.0",
+    "prettier": "^3.9.10",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.0",
+    "vitest": "^4.0.8"
+  }
+}

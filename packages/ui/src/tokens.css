@@ -1,0 +1,335 @@
+:root {
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  color: var(--color-text);
+  background: var(--color-page);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  /*
+   * Palette: the only place raw colour values live. Everything else uses var(--…) from here or the
+   * semantic tokens below; change a colour here and every screen follows. Names follow the design
+   * palette (camelCase → kebab-case). Duplicated values point at one base token.
+   */
+  /* Brand (yellow scale; --color-primary below points here) */
+  --color-brand-primary: #ffcd17;
+  --color-brand-primary-dark-1: #e5b814;
+  --color-brand-primary-dark-2: #b28f10;
+  --color-brand-primary-dark-3: #332904;
+  --color-brand-primary-light-1: #ffdc5c;
+  --color-brand-primary-light-2: #fff0b9;
+  --color-brand-primary-light-3: #fffae7;
+  --color-bg-primary: var(--color-brand-primary);
+  --color-text-primary: #000000;
+  --color-drawer-scrim: #ffffff99;
+  /* Charts */
+  --color-blue-chart-1: #bedaff;
+  --color-blue-chart-2: #6aa1ff;
+  --color-blue-chart-3: #3371ff;
+  --color-blue-chart-4: #264dcd;
+  --color-cyan-chart-1: #b7f4ec;
+  --color-cyan-chart-2: #5edfd6;
+  --color-cyan-chart-3: #14c9c9;
+  --color-cyan-chart-4: #07828b;
+  --color-cyan-chart-4-soft: #eaf5ff;
+  --color-green-chart-1: #cbffc0;
+  --color-green-chart-2: #99f286;
+  --color-green-chart-3: #7cd269;
+  --color-green-chart-4: #379d21;
+  --color-orange-chart-1: #fdddc3;
+  --color-orange-chart-2: #faac7b;
+  --color-orange-chart-3: #f77234;
+  --color-orange-chart-4: #a23511;
+  --color-yellow-chart-1: #fce996;
+  --color-yellow-chart-2: #ffd558;
+  --color-yellow-chart-3: #f7ba1e;
+  --color-yellow-chart-4: #cc9213;
+  /* Neutrals */
+  --color-grey-1: #1a0d27;
+  --color-neutral-0: #f9fcfb;
+  --color-neutral-1: #f5f5f5;
+  --color-neutral-2: #ededed;
+  --color-neutral-3: #e0e0e0;
+  --color-neutral-4: #bbbdbe;
+  --color-neutral-5: #8e9193;
+  --color-neutral-6: #50575e;
+  --color-neutral-7: #34383d;
+  --color-neutral-8: #1e2328;
+  --color-neutral-9: #0a0a0a;
+  --color-neutral-white: #ffffff;
+  --color-neutral-616568: #616568;
+  --color-surface-light: #fafbfb;
+  --color-cancel: var(--color-neutral-2);
+  --color-bg-tertiary: var(--color-neutral-2);
+  --color-bg-default: #f3f4f5;
+  --color-bg: var(--color-bg-default);
+  --color-text-descriptions: var(--color-neutral-6);
+  --color-icon-primary: var(--color-neutral-6);
+  --color-linear-end: #cccccc;
+  --color-linear-color-end: #d3d2d2;
+  /* System states */
+  --color-system-alert: #f1b422;
+  --color-system-alert-border: #f1b42233;
+  --color-system-alert-soft: #fff9e5;
+  --color-system-error: #ff3b30;
+  --color-system-error-border: #ff3b3033;
+  --color-system-error-hover: #e62a1f;
+  --color-system-error-soft: #ffebea;
+  --color-bg-color-error: var(--color-system-error-soft);
+  --color-color-error: #d92d20;
+  --color-bg-error-light: #feeeea;
+  --color-red: #f4504f;
+  --color-system-info: #007aff;
+  --color-system-info-border: #007aff33;
+  --color-system-info-bg: #e5f1ff;
+  --color-text-info: #1570ef;
+  --color-system-success: #34c759;
+  --color-system-success-border: #34c75933;
+  --color-system-success-soft: #eaf9ee;
+  --color-bg-success-light: #e1fae9;
+  --color-icon-success: #079455;
+  --color-system-warning: #ff9500;
+  --color-system-warning-border: #ff950033;
+  --color-system-soft: #fff4e5;
+  --color-tag-warning-text: #de6b07;
+  --color-tag-warning-bg: #fef1e0;
+  --color-tag-warning-border: #fecb89;
+  --color-yellow: #ffca28;
+  --color-outrageous-orange: #ff6940;
+  --color-system-purple: #7b2cbf;
+  --color-system-purple-soft: #f1e9f8;
+  --color-system-cyan: #2abdc2;
+  --color-system-maintenance: #4034c7;
+  --color-system-maintenance-soft: #eeedf7;
+  --color-system-liquidated: #07548b;
+  --color-system-liquidated-soft: var(--color-cyan-chart-4-soft);
+  --color-system-liquidated-border: #b7d3f4;
+
+  /* Semantic tokens used by the app: each one points at a palette colour above, never a raw value. */
+  --color-text: var(--color-neutral-8);
+  --color-muted: var(--color-text-descriptions);
+  /* Primary = brand yellow. Fills/borders use --color-primary; text and icons on light surfaces use
+     --color-primary-text (dark brand brown, 14:1 on white; yellow text is unreadable); text on a primary fill uses --color-on-primary. */
+  --color-primary: var(--color-brand-primary);
+  --color-primary-text: var(--color-brand-primary-dark-3);
+  --color-on-primary: var(--color-text-primary);
+  --color-primary-hover: var(--color-brand-primary-dark-1);
+  --color-surface: var(--color-neutral-white);
+  --color-border: var(--color-neutral-2);
+  --color-success: var(--color-icon-success);
+  --color-success-bg: var(--color-system-success-soft);
+  /* Errors everywhere (validation, required *, invalid borders, error badges, danger actions) use the system error palette. */
+  --color-error: var(--color-system-error);
+  /* Error text (messages, badges, danger labels): the darker palette red, readable at 4.8:1 on white. */
+  --color-error-text: var(--color-color-error);
+  --color-error-hover: var(--color-system-error-hover);
+  --color-error-bg: var(--color-system-error-soft);
+  --color-error-border: var(--color-system-error-border);
+  --color-page: var(--color-bg-default);
+  --color-surface-soft: var(--color-neutral-1);
+  --color-primary-bg: var(--color-brand-primary-light-3);
+  --color-primary-border: var(--color-brand-primary-light-2);
+  --color-warning: var(--color-orange-chart-4);
+  --color-warning-bg: var(--color-tag-warning-bg);
+  --color-accent: var(--color-brand-primary-dark-2);
+  --color-soft-blue: var(--color-system-info-bg);
+  --color-soft-peach: var(--color-system-soft);
+  --color-kitchen-lane: var(--color-neutral-3);
+  --color-kitchen-lane-border: var(--color-neutral-4);
+  --color-kitchen-overdue-bg: var(--color-bg-error-light);
+  --color-kitchen-overdue-pulse: var(--color-system-error-border);
+  --color-overlay: color-mix(in srgb, var(--color-neutral-9) 40%, transparent);
+  --color-receipt-text: var(--color-neutral-9);
+  --shadow-card: 0 3px 16px
+    color-mix(in srgb, var(--color-neutral-9) 2%, transparent);
+  --shadow-modal: 0 24px 100px
+    color-mix(in srgb, var(--color-neutral-9) 20%, transparent);
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --radius-sm: 0.625rem;
+  --radius-lg: 1.5rem;
+  --radius-md: 0.875rem;
+  --radius-pill: 999px;
+  --sidebar-width: 228px;
+  --order-panel-width: 350px;
+}
+
+/* Fishing World roles: aliases of the supplied POSORA palette only. */
+:root {
+  --color-focus: var(--color-brand-primary-dark-3);
+  --color-input-border: var(--color-neutral-5);
+  --color-shadow: var(--color-neutral-9);
+  --color-danger-bg: var(--color-error-bg);
+  --color-danger-hover: color-mix(
+    in srgb,
+    var(--color-error-bg) 90%,
+    var(--color-error-text)
+  );
+  --color-on-danger: color-mix(
+    in srgb,
+    var(--color-error-text) 80%,
+    var(--color-text)
+  );
+  --color-success-text: var(--color-text);
+  --color-sidebar-surface: var(--color-neutral-9);
+  --color-sidebar-text: var(--color-neutral-0);
+  --color-sidebar-muted: var(--color-neutral-4);
+  --color-sidebar-hover: var(--color-neutral-7);
+  --color-sidebar-active: var(--color-primary-bg);
+  --color-sidebar-active-text: var(--color-primary-text);
+  --color-sidebar-border: var(--color-neutral-6);
+  --color-hero-text: var(--color-neutral-white);
+  --color-hero-muted: var(--color-neutral-1);
+  --color-hero-overlay: var(--color-neutral-9);
+  --color-control-track: var(--color-neutral-4);
+  --color-control-thumb: var(--color-surface);
+  --color-rarity-common-bg: var(--color-surface-soft);
+  --color-rarity-common-text: var(--color-text);
+  --color-rarity-uncommon-bg: var(--color-success-bg);
+  --color-rarity-uncommon-text: var(--color-text);
+  --color-rarity-rare-bg: var(--color-soft-blue);
+  --color-rarity-rare-text: var(--color-blue-chart-4);
+  --color-rarity-epic-bg: var(--color-system-purple-soft);
+  --color-rarity-epic-text: var(--color-system-purple);
+  --color-rarity-legendary-bg: var(--color-primary-bg);
+  --color-rarity-legendary-text: var(--color-primary-text);
+  --color-rarity-mythical-bg: var(--color-system-purple-soft);
+  --color-rarity-mythical-text: var(--color-system-purple);
+  --color-art-eye-light: var(--color-neutral-white);
+  --color-art-eye-dark: var(--color-neutral-8);
+  --color-art-bait-dark: var(--color-orange-chart-3);
+  --color-art-bait-light: var(--color-orange-chart-1);
+  --color-art-metal: var(--color-neutral-5);
+  --color-art-metal-dark: var(--color-neutral-6);
+  --color-art-metal-light: var(--color-neutral-3);
+  --color-art-metal-center: var(--color-neutral-0);
+  --color-art-rod: var(--color-green-chart-4);
+  --color-art-grip: var(--color-brand-primary-dark-3);
+  --color-art-reel: var(--color-brand-primary-light-1);
+  --color-art-line: var(--color-neutral-5);
+  --color-scene-sky-top: var(--color-cyan-chart-4-soft);
+  --color-scene-sky-bottom: var(--color-brand-primary-light-3);
+  --color-scene-sun: var(--color-brand-primary-light-1);
+  --color-scene-hill-far: var(--color-green-chart-1);
+  --color-scene-hill-middle: var(--color-green-chart-2);
+  --color-scene-hill-near: var(--color-green-chart-4);
+  --color-scene-water-top: var(--color-cyan-chart-2);
+  --color-scene-water-bottom: var(--color-cyan-chart-1);
+  --color-scene-tree: var(--color-green-chart-4);
+  --color-scene-tree-light: var(--color-green-chart-3);
+  --color-scene-grass: var(--color-green-chart-3);
+  --color-scene-grass-light: var(--color-green-chart-2);
+  --color-scene-grass-dark: var(--color-green-chart-4);
+  --color-scene-wood-dark: var(--color-brand-primary-dark-3);
+  --color-scene-wood: var(--color-brand-primary-dark-2);
+  --color-scene-wood-light: var(--color-orange-chart-2);
+  --color-scene-pants: var(--color-neutral-7);
+  --color-scene-shirt: var(--color-brand-primary);
+  --color-scene-skin: var(--color-orange-chart-2);
+  --color-scene-hat: var(--color-brand-primary-light-1);
+  --color-scene-hat-shadow: var(--color-brand-primary-dark-2);
+  --color-scene-rod: var(--color-neutral-6);
+  --color-scene-reel: var(--color-brand-primary-dark-2);
+  --color-scene-outline: var(--color-neutral-7);
+  --color-scene-bobber: var(--color-orange-chart-3);
+  --color-scene-bobber-light: var(--color-neutral-white);
+  --color-scene-fish-shadow: var(--color-cyan-chart-4);
+  --color-scene-reed: var(--color-brand-primary-dark-3);
+  --color-scene-bird: var(--color-neutral-6);
+  --color-scene-ripple: var(--color-neutral-white);
+  --color-scene-line: var(--color-neutral-white);
+  --color-scene-light: var(--color-neutral-white);
+  --color-scene-lotus: var(--color-orange-chart-1);
+  --color-scene-lotus-heart: var(--color-yellow-chart-2);
+  --color-scene-lotus-pad: var(--color-green-chart-3);
+  --color-scene-stone: var(--color-neutral-4);
+  /* Time of day (player's real local clock) */
+  --color-scene-night-sky-top: var(--color-grey-1);
+  --color-scene-night-sky-bottom: var(--color-blue-chart-4);
+  --color-scene-dawn-sky-top: var(--color-blue-chart-1);
+  --color-scene-dawn-sky-bottom: var(--color-orange-chart-1);
+  --color-scene-dusk-sky-top: var(--color-blue-chart-4);
+  --color-scene-dusk-sky-bottom: var(--color-orange-chart-3);
+  --color-scene-golden-light: var(--color-yellow-chart-2);
+  --color-scene-dusk-light: var(--color-orange-chart-2);
+  --color-scene-moon-light: var(--color-blue-chart-1);
+  --color-scene-moon: var(--color-neutral-0);
+  --color-scene-star: var(--color-neutral-white);
+  --color-scene-firefly: var(--color-yellow-chart-1);
+  --color-scene-lantern: var(--color-yellow-chart-3);
+  /* Terrain kits per fishing spot */
+  --color-scene-sand: var(--color-yellow-chart-1);
+  --color-scene-sand-dark: var(--color-yellow-chart-4);
+  --color-scene-mud: var(--color-brand-primary-dark-2);
+  --color-scene-silt: var(--color-yellow-chart-4);
+  --color-scene-rock: var(--color-neutral-5);
+  --color-scene-rock-dark: var(--color-neutral-6);
+  --color-scene-moss: var(--color-green-chart-4);
+  --color-scene-sea-top: var(--color-blue-chart-2);
+  --color-scene-sea-bottom: var(--color-cyan-chart-3);
+  --color-scene-swamp: var(--color-neutral-8);
+  --color-scene-foam: var(--color-neutral-white);
+  --color-scene-palm: var(--color-green-chart-3);
+  --color-scene-bamboo: var(--color-green-chart-2);
+  --color-scene-mangrove: var(--color-neutral-7);
+  --color-fish-carp-dark: var(--color-orange-chart-4);
+  --color-fish-belly: var(--color-neutral-0);
+  --color-fish-carp-light: var(--color-orange-chart-1);
+  --color-fish-grass-carp-dark: var(--color-green-chart-4);
+  --color-fish-grass-carp-light: var(--color-green-chart-1);
+  --color-fish-tilapia-dark: var(--color-cyan-chart-4);
+  --color-fish-tilapia-light: var(--color-cyan-chart-1);
+  --color-fish-snakehead-dark: var(--color-neutral-6);
+  --color-fish-snakehead-light: var(--color-neutral-4);
+  --color-fish-catfish-dark: var(--color-neutral-6);
+  --color-fish-catfish-light: var(--color-neutral-3);
+  --color-fish-pangasius-dark: var(--color-blue-chart-4);
+  --color-fish-pangasius-light: var(--color-blue-chart-1);
+  --color-fish-silver-carp-dark: var(--color-neutral-5);
+  --color-fish-silver-carp-light: var(--color-neutral-2);
+  --color-fish-perch-dark: var(--color-green-chart-4);
+  --color-fish-perch-light: var(--color-green-chart-2);
+  --color-fish-gourami-dark: var(--color-orange-chart-4);
+  --color-fish-gourami-light: var(--color-orange-chart-1);
+  --color-fish-red-tilapia-dark: var(--color-orange-chart-3);
+  --color-fish-red-tilapia-light: var(--color-orange-chart-1);
+  --color-fish-default-dark: var(--color-cyan-chart-4);
+  --color-fish-default-light: var(--color-cyan-chart-1);
+}
+
+/* Character and fashion roles share the approved palette. */
+:root {
+  --color-character-vermilion: var(--color-orange-chart-4);
+  --color-character-gold: var(--color-brand-primary-dark-2);
+  --color-character-jade: var(--color-cyan-chart-4);
+  --color-character-blue: var(--color-blue-chart-4);
+  --color-character-ivory: var(--color-brand-primary-light-3);
+  --color-character-wood: var(--color-brand-primary-dark-3);
+  --color-character-ink: var(--color-neutral-8);
+  --color-character-silver: var(--color-neutral-3);
+  --color-character-wine: var(--color-grey-1);
+  --color-character-lilac: var(--color-system-purple-soft);
+  --color-character-blush: var(--color-orange-chart-1);
+  --color-character-skin-light: var(--color-orange-chart-1);
+  --color-character-skin-warm: var(--color-orange-chart-2);
+  --color-character-skin-tan: var(--color-orange-chart-3);
+  --color-character-skin-deep: var(--color-orange-chart-4);
+  --color-character-lips: var(--color-orange-chart-4);
+  --color-studio-floor: var(--color-neutral-4);
+  --color-studio-wall: var(--color-brand-primary-light-3);
+  --color-studio-night: var(--color-grey-1);
+  --color-studio-lantern: var(--color-orange-chart-4);
+  --color-studio-water: var(--color-cyan-chart-4);
+  --color-studio-bamboo: var(--color-green-chart-4);
+}

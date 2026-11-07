@@ -1,0 +1,555 @@
+// Discovery design only. No generated client/migration exists yet.
+// Target Prisma syntax 7.10.1; Foundation must audit Node compatibility before pinning.
+// Connection URL belongs in future apps/api/prisma.config.ts, not this schema.
+// Production identity/age/guardian/time controls need LEGAL.md review before beta.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  GAME_ADMIN
+  SUPPORT
+  ANALYST
+}
+
+enum FishingState {
+  IDLE
+  CASTING
+  WAITING
+  BITE
+  HOOKING
+  FIGHTING
+  REELING
+  CAUGHT
+  ESCAPED
+  FINISHED
+}
+
+enum Rarity {
+  COMMON
+  UNCOMMON
+  RARE
+  EPIC
+  LEGENDARY
+}
+
+enum EquipmentSlot {
+  ROD
+  LINE
+  HOOK
+  COSMETIC
+}
+
+model User {
+  id              String    @id @default(uuid()) @db.Uuid
+  emailNormalized String    @unique @map("email_normalized") @db.VarChar(254)
+  passwordHash    String    @map("password_hash")
+  status          UserStatus @default(ACTIVE)
+  emailVerifiedAt DateTime? @map("email_verified_at") @db.Timestamptz(3)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz(3)
+  profile         UserProfile?
+  sessions        UserSession[]
+  passwordResets  PasswordResetToken[]
+  inventory       UserInventory[]
+  equipment       UserEquipment[]
+  collection      FishCollection[]
+  fishingSessions FishingSession[]
+  catches         FishingCatch[]
+  wallet          Wallet?
+  orders          ShopOrder[]
+  missions        UserMission[]
+  achievements    UserAchievement[]
+  admin           AdminUser?
+  auditLogs       AuditLog[]
+  analytics       AnalyticsEvent[]
+  idempotency     IdempotencyRecord[]
+  grants          UserGrant[]
+  @@map("users")
+}
+
+model UserProfile {
+  id                 String   @id @default(uuid()) @db.Uuid
+  userId             String   @unique @map("user_id") @db.Uuid
+  username           String   @db.VarChar(24)
+  normalizedUsername String   @unique @map("normalized_username") @db.VarChar(48)
+  avatarKey          String?  @map("avatar_key")
+  totalXp            Int      @default(0) @map("total_xp")
+  totalFish          Int      @default(0) @map("total_fish")
+  largestFishG       Int      @default(0) @map("largest_fish_g")
+  settings           Json
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user               User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  @@index([totalXp(sort: Desc), userId])
+  @@index([largestFishG(sort: Desc), userId])
+  @@map("user_profiles")
+}
+
+model UserSession {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @map("user_id") @db.Uuid
+  tokenHash  String    @unique @map("token_hash")
+  familyId   String    @map("family_id") @db.Uuid
+  parentId   String?   @unique @map("parent_id") @db.Uuid
+  deviceLabel String?  @map("device_label") @db.VarChar(128)
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(3)
+  absoluteExpiresAt DateTime @map("absolute_expires_at") @db.Timestamptz(3)
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(3)
+  usedAt     DateTime? @map("used_at") @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  parent     UserSession? @relation("Rotation", fields: [parentId], references: [id], onDelete: Restrict)
+  child      UserSession? @relation("Rotation")
+  @@index([userId, revokedAt])
+  @@index([familyId])
+  @@index([expiresAt])
+  @@map("user_sessions")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  @@index([userId, expiresAt])
+  @@map("password_reset_tokens")
+}
+
+model FishSpecies {
+  id              String   @id @default(uuid()) @db.Uuid
+  slug            String   @unique
+  name            String
+  description     String
+  imageKey        String   @map("image_key")
+  rarity          Rarity
+  baseWeightG     Int      @map("base_weight_g")
+  minWeightG      Int      @map("min_weight_g")
+  maxWeightG      Int      @map("max_weight_g")
+  baseRewardGold  BigInt   @map("base_reward_gold")
+  baseXp          Int      @map("base_xp")
+  habitat         String
+  preferredBaits  Json     @map("preferred_baits") // Slug -> bounded affinity; Zod validates references.
+  difficulty      Int
+  pullStrength    Int      @map("pull_strength")
+  reactionMs      Int      @map("reaction_ms")
+  active          Boolean  @default(true)
+  version         Int      @default(1)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  locations       LocationFish[]
+  collections     FishCollection[]
+  catches         FishingCatch[]
+  @@map("fish_species")
+}
+
+model FishingLocation {
+  id           String   @id @default(uuid()) @db.Uuid
+  slug         String   @unique
+  name         String
+  environment  String
+  minLevel     Int      @default(1) @map("min_level")
+  entryFeeGold BigInt   @default(0) @map("entry_fee_gold")
+  difficulty   Int      @default(1)
+  imageKey     String   @map("image_key")
+  assetConfig  Json     @map("asset_config")
+  active       Boolean  @default(true)
+  version      Int      @default(1)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  fish         LocationFish[]
+  sessions     FishingSession[]
+  catches      FishingCatch[]
+  @@map("fishing_locations")
+}
+
+model LocationFish {
+  id         String @id @default(uuid()) @db.Uuid
+  locationId String @map("location_id") @db.Uuid
+  fishId     String @map("fish_id") @db.Uuid
+  baseWeight Int    @map("base_weight")
+  conditions Json
+  location   FishingLocation @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  fish       FishSpecies @relation(fields: [fishId], references: [id], onDelete: Restrict)
+  @@unique([locationId, fishId])
+  @@index([fishId])
+  @@map("location_fish")
+}
+
+model Equipment {
+  id            String   @id @default(uuid()) @db.Uuid
+  slug          String   @unique
+  name          String
+  slot          EquipmentSlot
+  minLevel      Int      @default(1) @map("min_level")
+  basePriceGold BigInt   @map("base_price_gold")
+  imageKey      String   @map("image_key")
+  active        Boolean  @default(true)
+  version       Int      @default(1)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  stats         EquipmentStat[]
+  inventory     UserInventory[]
+  shopItems     ShopItem[]
+  @@map("equipment")
+}
+
+model EquipmentStat {
+  id          String @id @default(uuid()) @db.Uuid
+  equipmentId String @map("equipment_id") @db.Uuid
+  key         String
+  value       Int
+  equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Restrict)
+  @@unique([equipmentId, key])
+  @@map("equipment_stats")
+}
+
+model BaitType {
+  id               String   @id @default(uuid()) @db.Uuid
+  slug             String   @unique
+  name             String
+  priceGold        BigInt   @map("price_gold")
+  imageKey         String   @map("image_key")
+  attractionConfig Json     @map("attraction_config")
+  active           Boolean  @default(true)
+  version          Int      @default(1)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  inventory        UserInventory[]
+  shopItems        ShopItem[]
+  @@map("bait_types")
+}
+
+model UserInventory {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  equipmentId  String?  @map("equipment_id") @db.Uuid
+  baitTypeId   String?  @map("bait_type_id") @db.Uuid
+  quantity     Int      @default(1)
+  upgradeLevel Int      @default(0) @map("upgrade_level")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user         User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  equipment    Equipment? @relation(fields: [equipmentId], references: [id], onDelete: Restrict)
+  bait         BaitType? @relation(fields: [baitTypeId], references: [id], onDelete: Restrict)
+  equipped     UserEquipment?
+  @@index([userId, equipmentId])
+  @@index([userId, baitTypeId])
+  @@map("user_inventory")
+}
+
+model UserEquipment {
+  id          String @id @default(uuid()) @db.Uuid
+  userId      String @map("user_id") @db.Uuid
+  inventoryId String @unique @map("inventory_id") @db.Uuid
+  slot        EquipmentSlot
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user        User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  inventory   UserInventory @relation(fields: [inventoryId], references: [id], onDelete: Restrict)
+  @@unique([userId, slot])
+  @@map("user_equipment")
+}
+
+model FishCollection {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  fishId        String   @map("fish_id") @db.Uuid
+  count         Int      @default(0)
+  bestWeightG   Int      @map("best_weight_g")
+  firstCaughtAt DateTime @map("first_caught_at") @db.Timestamptz(3)
+  lastCaughtAt  DateTime @map("last_caught_at") @db.Timestamptz(3)
+  user          User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  fish          FishSpecies @relation(fields: [fishId], references: [id], onDelete: Restrict)
+  @@unique([userId, fishId])
+  @@map("fish_collections")
+}
+
+model FishingSession {
+  id             String       @id @default(uuid()) @db.Uuid
+  userId         String       @map("user_id") @db.Uuid
+  locationId     String       @map("location_id") @db.Uuid
+  configId       String       @map("config_id") @db.Uuid
+  state          FishingState @default(IDLE)
+  version        Int          @default(0)
+  configSnapshot Json         @map("config_snapshot")
+  secretOutcome  Json?        @map("secret_outcome")
+  simulation     Json
+  castAt         DateTime?    @map("cast_at") @db.Timestamptz(3)
+  biteAt         DateTime?    @map("bite_at") @db.Timestamptz(3)
+  hookDeadline   DateTime?    @map("hook_deadline") @db.Timestamptz(3)
+  lastTickAt     DateTime?    @map("last_tick_at") @db.Timestamptz(3)
+  expiresAt      DateTime     @map("expires_at") @db.Timestamptz(3)
+  finishedAt     DateTime?    @map("finished_at") @db.Timestamptz(3)
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user           User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  location       FishingLocation @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  config         SystemConfig @relation(fields: [configId], references: [id], onDelete: Restrict)
+  actions        FishingAction[]
+  catch          FishingCatch?
+  @@index([userId, createdAt])
+  @@index([state, updatedAt])
+  @@index([expiresAt])
+  @@map("fishing_sessions")
+}
+
+model FishingAction {
+  id             String   @id @default(uuid()) @db.Uuid
+  sessionId      String   @map("session_id") @db.Uuid
+  idempotencyKey String   @map("idempotency_key") @db.Uuid
+  requestHash    String   @map("request_hash")
+  action         String
+  expectedVersion Int     @map("expected_version")
+  payload        Json
+  response       Json
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  session        FishingSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  @@unique([sessionId, idempotencyKey])
+  @@index([sessionId, createdAt])
+  @@map("fishing_actions")
+}
+
+model FishingCatch {
+  id            String   @id @default(uuid()) @db.Uuid
+  sessionId     String   @unique @map("session_id") @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  fishId        String   @map("fish_id") @db.Uuid
+  locationId    String   @map("location_id") @db.Uuid
+  weightG       Int      @map("weight_g")
+  rarity        Rarity
+  rewardGold    BigInt   @map("reward_gold")
+  rewardXp      Int      @map("reward_xp")
+  rewardSnapshot Json    @map("reward_snapshot")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  session       FishingSession @relation(fields: [sessionId], references: [id], onDelete: Restrict)
+  user          User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  fish          FishSpecies @relation(fields: [fishId], references: [id], onDelete: Restrict)
+  location      FishingLocation @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  @@index([userId, createdAt])
+  @@index([fishId, weightG(sort: Desc)])
+  @@map("fishing_catches")
+}
+
+model Wallet {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @unique @map("user_id") @db.Uuid
+  balanceGold  BigInt   @default(0) @map("balance_gold")
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user         User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  transactions WalletTransaction[]
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id               String   @id @default(uuid()) @db.Uuid
+  walletId         String   @map("wallet_id") @db.Uuid
+  deltaGold        BigInt   @map("delta_gold")
+  balanceAfterGold BigInt   @map("balance_after_gold")
+  reason           String
+  referenceType    String   @map("reference_type")
+  referenceId      String   @map("reference_id")
+  idempotencyKey   String   @map("idempotency_key")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  wallet           Wallet @relation(fields: [walletId], references: [id], onDelete: Restrict)
+  @@unique([walletId, idempotencyKey])
+  @@unique([walletId, reason, referenceType, referenceId])
+  @@index([walletId, createdAt, id])
+  @@map("wallet_transactions")
+}
+
+model ShopItem {
+  id          String   @id @default(uuid()) @db.Uuid
+  equipmentId String?  @map("equipment_id") @db.Uuid
+  baitTypeId  String?  @map("bait_type_id") @db.Uuid
+  priceGold   BigInt   @map("price_gold")
+  grantQuantity Int    @default(1) @map("grant_quantity") // E.g. one worm pack grants 10 bait units.
+  stock       Int?
+  minLevel    Int      @default(1) @map("min_level")
+  active      Boolean  @default(true)
+  version     Int      @default(1)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  equipment   Equipment? @relation(fields: [equipmentId], references: [id], onDelete: Restrict)
+  bait        BaitType? @relation(fields: [baitTypeId], references: [id], onDelete: Restrict)
+  orders      ShopOrder[]
+  @@map("shop_items")
+}
+
+model ShopOrder {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  shopItemId     String   @map("shop_item_id") @db.Uuid
+  quantity       Int
+  unitPriceGold  BigInt   @map("unit_price_gold")
+  totalGold      BigInt   @map("total_gold")
+  itemSnapshot   Json     @map("item_snapshot")
+  idempotencyKey String   @map("idempotency_key") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  user           User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  item           ShopItem @relation(fields: [shopItemId], references: [id], onDelete: Restrict)
+  @@unique([userId, idempotencyKey])
+  @@index([userId, createdAt])
+  @@map("shop_orders")
+}
+
+model Mission {
+  id         String   @id @default(uuid()) @db.Uuid
+  key        String   @unique
+  name       String
+  eventType  String   @map("event_type")
+  target     Int
+  rewardGold BigInt   @map("reward_gold")
+  rewardXp   Int      @map("reward_xp")
+  active     Boolean  @default(true)
+  version    Int      @default(1)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  players    UserMission[]
+  @@map("missions")
+}
+
+model UserMission {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  missionId      String    @map("mission_id") @db.Uuid
+  periodKey      String    @map("period_key") @db.VarChar(10)
+  progress       Int       @default(0)
+  rewardSnapshot Json      @map("reward_snapshot")
+  criteriaSnapshot Json    @map("criteria_snapshot") // Frozen target/event/filter for this occurrence.
+  completedAt    DateTime? @map("completed_at") @db.Timestamptz(3)
+  claimedAt      DateTime? @map("claimed_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user           User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  mission        Mission @relation(fields: [missionId], references: [id], onDelete: Restrict)
+  @@unique([userId, missionId, periodKey])
+  @@map("user_missions")
+}
+
+model Achievement {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String   @unique
+  name      String
+  criteria  Json
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  players   UserAchievement[]
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  achievementId String   @map("achievement_id") @db.Uuid
+  unlockedAt    DateTime @default(now()) @map("unlocked_at") @db.Timestamptz(3)
+  user          User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Restrict)
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+model AdminUser {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @unique @map("user_id") @db.Uuid
+  role      AdminRole
+  version   Int       @default(1)
+  mfaEnabled Boolean  @default(false) @map("mfa_enabled")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+  user      User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  @@map("admin_users")
+}
+
+model AuditLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  actorId      String?  @map("actor_id") @db.Uuid
+  actorSnapshot Json    @map("actor_snapshot")
+  action       String
+  targetType   String   @map("target_type")
+  targetId     String   @map("target_id")
+  before       Json?
+  after        Json?
+  reason       String?
+  requestId    String   @map("request_id")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  actor        User? @relation(fields: [actorId], references: [id], onDelete: Restrict)
+  @@index([actorId, createdAt])
+  @@index([targetType, targetId, createdAt])
+  @@map("audit_logs")
+}
+
+model SystemConfig {
+  id            String    @id @default(uuid()) @db.Uuid
+  key           String
+  version       Int
+  schemaVersion Int       @map("schema_version")
+  value         Json
+  publishedAt   DateTime? @map("published_at") @db.Timestamptz(3)
+  isActive      Boolean   @default(false) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  sessions      FishingSession[]
+  @@unique([key, version])
+  @@index([key, isActive])
+  @@map("system_configs")
+}
+
+model IdempotencyRecord {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String   @map("user_id") @db.Uuid
+  route        String
+  key          String   @db.Uuid
+  requestHash  String   @map("request_hash")
+  statusCode   Int      @map("status_code")
+  response     Json
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt    DateTime @map("expires_at") @db.Timestamptz(3)
+  user         User @relation(fields: [userId], references: [id], onDelete: Restrict)
+  @@unique([userId, route, key])
+  @@index([expiresAt])
+  @@map("idempotency_records")
+}
+
+model AnalyticsEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  eventId    String   @unique @map("event_id") @db.Uuid
+  userId     String?  @map("user_id") @db.Uuid
+  eventName  String   @map("event_name")
+  source     String   // SERVER or CLIENT; CLIENT cannot issue rewards.
+  properties Json
+  occurredAt DateTime @map("occurred_at") @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  processedAt DateTime? @map("processed_at") @db.Timestamptz(3)
+  attempts    Int      @default(0)
+  user       User? @relation(fields: [userId], references: [id], onDelete: Restrict)
+  @@index([eventName, occurredAt])
+  @@index([userId, occurredAt])
+  @@index([processedAt, createdAt])
+  @@map("analytics_events")
+}
+
+model UserGrant {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  key       String   // e.g. DAILY_BAIT_RESCUE
+  periodKey String   @map("period_key") @db.VarChar(10)
+  payload   Json     // Immutable granted item/quantity/config reference, no secret.
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Restrict)
+  @@unique([userId, key, periodKey])
+  @@map("user_grants")
+}

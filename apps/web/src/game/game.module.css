@@ -1,0 +1,614 @@
+.pageHeading :global(.fwo-page-header) {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.pageHeading h1 {
+  font-size: 24px;
+  margin: 0;
+  line-height: 1.35;
+}
+.pageHeading :global(.fwo-header-action) {
+  flex-shrink: 0;
+}
+.headerActions {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  flex-wrap: wrap;
+}
+.headerActions button {
+  min-height: 44px;
+}
+.gameLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+.gamePanel {
+  align-self: start;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--color-surface);
+}
+.gameScene {
+  position: relative;
+  width: 100%;
+  height: clamp(300px, 56svh, 650px);
+  background: var(--color-scene-water-bottom);
+  overflow: hidden;
+}
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.canvas canvas {
+  display: block;
+  touch-action: manipulation;
+}
+.sceneHeader {
+  position: absolute;
+  inset: var(--space-3) auto auto var(--space-3);
+  max-width: calc(100% - 120px);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  pointer-events: none;
+}
+.scenePill {
+  display: inline-flex;
+  gap: var(--space-1);
+  align-items: center;
+  font-size: 11px;
+  color: var(--color-primary-text);
+  background: var(--color-primary-bg);
+  padding: 6px var(--space-2);
+  border-radius: var(--radius-pill);
+}
+.viewActions {
+  position: absolute;
+  right: var(--space-3);
+  top: var(--space-3);
+  display: flex;
+  gap: var(--space-1);
+}
+.viewActions button {
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  min-width: 44px;
+  min-height: 44px;
+}
+.sceneCaption {
+  position: absolute;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
+  max-width: calc(100% - 24px);
+  font-size: 11px;
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+  padding: 6px var(--space-2);
+  border-radius: var(--radius-pill);
+  pointer-events: none;
+}
+.fightHud {
+  position: absolute;
+  left: var(--space-3);
+  bottom: var(--space-3);
+  width: min(300px, calc(100% - 24px));
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-surface) 95%, transparent);
+  pointer-events: none;
+}
+.gameScene:has(.fightHud) .sceneCaption {
+  bottom: auto;
+  top: 68px;
+}
+.fightHud :global(.fwo-progress-label) {
+  gap: var(--space-2);
+  font-size: 11px;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+.biteLabel {
+  position: absolute;
+  top: 48%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+  box-shadow: var(--shadow-modal);
+  border-radius: var(--radius-pill);
+  padding: var(--space-3) var(--space-4);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  animation: bite 0.7s infinite alternate;
+  pointer-events: none;
+}
+.gameControls {
+  padding: var(--space-4);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2) var(--space-4);
+  align-items: center;
+}
+.gameControls[hidden],
+.gameAside[hidden] {
+  display: none;
+}
+.stateText {
+  grid-column: 1;
+  min-width: 0;
+}
+.stateText h3 {
+  margin: 0;
+  font-family: 'Literata', serif;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+.tensionWarning {
+  display: block;
+  font-size: 12px;
+  color: var(--color-error-text);
+  margin-top: var(--space-1);
+}
+.tools {
+  grid-column: 1;
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
+  min-width: 0;
+}
+.tools button {
+  min-height: 44px;
+}
+.tools button[aria-expanded='true'] {
+  background: var(--color-primary-bg);
+  color: var(--color-primary-text);
+}
+.baitButton {
+  min-width: 0;
+  max-width: 300px;
+  padding-inline: var(--space-3);
+  font-size: 12px;
+}
+.baitButton span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.baitButton svg {
+  flex-shrink: 0;
+}
+.actionRow {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  text-align: center;
+}
+.actionRow :global(.fwo-bottom-actions) {
+  padding: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  border: 0;
+  justify-content: center;
+}
+.castButton {
+  width: 100%;
+  min-width: 220px;
+  min-height: 52px;
+  font-size: 14px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.hookButton {
+  animation: hook-pulse 0.7s infinite alternate;
+}
+.holding {
+  background: var(--color-primary-hover) !important;
+}
+.keyboardHint {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  font-size: 11px;
+  color: var(--color-muted);
+}
+.keyboardHint kbd {
+  font: inherit;
+  padding: 2px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--color-page);
+}
+.simControls {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+.simControls :global(.fwo-field) {
+  margin-bottom: 0;
+}
+.simControls :global(.fwo-field-label) {
+  font-size: 12px;
+}
+.controlHelp {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  margin: 0;
+}
+.details {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-3);
+}
+.details > p {
+  font-size: 12px;
+  margin: 0 0 var(--space-3);
+}
+.meters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+.meterLabel {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: 11px;
+  color: var(--color-muted);
+  margin-bottom: var(--space-1);
+}
+.gameAside {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+.loadoutCard {
+  padding: var(--space-4);
+}
+.asideTitle {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+.asideTitle h3 {
+  margin: 0;
+  font-size: 14px;
+}
+.equippedItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.equipmentDot {
+  background: var(--color-surface-soft);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: grid;
+  place-items: center;
+  color: var(--color-primary-text);
+  flex-shrink: 0;
+}
+.equippedItem div {
+  flex: 1;
+  min-width: 0;
+}
+.equippedItem small {
+  font-size: 10px;
+  color: var(--color-muted);
+  display: block;
+}
+.equippedItem strong {
+  font-size: 13px;
+  font-weight: 500;
+  display: block;
+}
+.equippedItem > svg {
+  color: var(--color-primary-text);
+}
+.loadoutCard :global(.fwo-field) {
+  margin-top: var(--space-4);
+}
+.asideLink {
+  width: 100%;
+  justify-content: space-between;
+}
+.guideCard {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-primary-bg);
+  border-color: var(--color-primary-border);
+}
+.guideIcon {
+  display: none;
+}
+.guideCard h3 {
+  font-size: 16px;
+  margin-block: var(--space-2);
+}
+.guideCard ol {
+  padding-left: var(--space-4);
+  font-size: 12px;
+  line-height: 1.8;
+}
+.guideCard p {
+  font-size: 12px;
+  margin: 0;
+}
+.fullscreen {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  background: var(--color-surface);
+}
+.fullscreen .gameScene {
+  height: calc(100svh - 130px);
+}
+.community {
+  padding: var(--space-4);
+  min-width: 0;
+}
+.community p {
+  font-size: 12px;
+}
+.weekly {
+  padding-left: var(--space-4);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.weekly li {
+  padding: var(--space-2) 0;
+}
+.weekly li strong {
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+.messages {
+  max-height: 260px;
+  overflow-y: auto;
+  margin-bottom: var(--space-4);
+  overflow-wrap: anywhere;
+}
+.messages article {
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-3) 0;
+}
+.messages strong {
+  font-size: 12px;
+}
+.messages time {
+  color: var(--color-muted);
+  display: block;
+  font-size: 10px;
+}
+.messages p {
+  margin: var(--space-2) 0;
+  white-space: pre-wrap;
+}
+.sharedCatch :global(.fwo-art) {
+  height: 65px;
+}
+.sharedCatch :global(.fwo-art--photo) {
+  width: 98px;
+  max-width: 100%;
+  height: auto;
+}
+.sharedCatch {
+  font-size: 12px;
+}
+.connectionError {
+  text-align: center;
+}
+.connectionError :global(.fwo-notice) {
+  text-align: left;
+}
+.catchResult {
+  text-align: center;
+}
+.resultArt {
+  border-radius: 12px;
+  background: var(--color-surface-soft);
+  margin-bottom: 20px;
+}
+.resultArt :global(.fwo-art) {
+  height: 170px;
+}
+.resultArt :global(.fwo-art--photo) {
+  height: auto;
+}
+.resultBadges {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+.catchResult h2 {
+  margin-bottom: 4px;
+}
+.catchWeight {
+  font-family: 'Literata', serif;
+  font-size: 30px;
+  font-weight: 400;
+  color: var(--color-primary-text);
+}
+.catchResult > p {
+  font-size: 11px;
+  line-height: 1.8;
+  margin: 15px auto 20px;
+  max-width: 330px;
+}
+.resultRewards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 18px 12px;
+  margin-bottom: 20px;
+}
+.resultRewards > div:first-child {
+  border-right: 1px solid var(--color-border);
+}
+.resultRewards small {
+  display: block;
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+  margin-bottom: 9px;
+}
+.resultRewards strong {
+  font-size: 14px;
+  color: var(--color-text);
+  font-weight: 500;
+}
+.catchResult :global(.fwo-notice) {
+  text-align: left;
+  font-size: 10px;
+}
+
+@keyframes bite {
+  to {
+    margin-top: -3px;
+  }
+}
+@keyframes hook-pulse {
+  to {
+    box-shadow: 0 0 0 6px
+      color-mix(in srgb, var(--color-primary) 20%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hookButton,
+  .biteLabel {
+    animation: none;
+  }
+}
+@media (max-width: 650px) {
+  .pageHeading h1 {
+    font-size: 20px;
+  }
+  .backLabel {
+    display: none;
+  }
+  .headerActions > button:last-child {
+    min-width: 44px;
+    padding-inline: var(--space-3);
+  }
+
+  .gamePanel {
+    border-radius: var(--radius-md);
+  }
+  .gameScene {
+    height: clamp(280px, 45svh, 480px);
+  }
+  .gameControls {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--space-3);
+    gap: var(--space-2);
+  }
+  .stateText {
+    text-align: center;
+  }
+  .stateText h3 {
+    font-size: 14px;
+  }
+  .tools {
+    grid-row: 3;
+    justify-content: center;
+    width: 100%;
+  }
+  .baitButton {
+    flex: 1;
+    max-width: none;
+  }
+  .actionRow {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+  }
+  .castButton {
+    min-width: 0;
+    min-height: 52px;
+  }
+  .simControls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .gameAside {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sceneHeader {
+    max-width: calc(100% - 120px);
+  }
+  .sceneHeader .scenePill:last-child {
+    display: none;
+  }
+  .scenePill,
+  .sceneCaption {
+    font-size: 10px;
+  }
+  .fightHud {
+    width: calc(100% - 24px);
+  }
+  .headerActions {
+    gap: var(--space-1);
+  }
+  .headerActions > button:last-child {
+    margin-left: auto;
+  }
+  .fullscreen .gameScene {
+    height: calc(100svh - 170px);
+  }
+}
+@media (pointer: coarse) {
+  .keyboardHint {
+    display: none;
+  }
+}
+.tutorialSteps > div {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.tutorialSteps > div > span {
+  display: grid;
+  place-items: center;
+  background: var(--color-primary-bg);
+  color: var(--color-primary-text);
+  width: 37px;
+  height: 37px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  font-family: Georgia, serif;
+  font-size: 17px;
+}
+.tutorialSteps h3 {
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.tutorialSteps p {
+  font-size: 11px;
+  line-height: 1.8;
+  margin: 0;
+}

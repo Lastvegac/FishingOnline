@@ -1,0 +1,83 @@
+.section {
+  margin-block: var(--space-8);
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));
+  gap: var(--space-6);
+  margin-block: var(--space-6);
+}
+.product {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.product h3,
+.product p {
+  margin: 0;
+}
+.product p {
+  color: var(--color-muted);
+}
+.product > :global(.fwo-bottom-actions) {
+  align-self: stretch;
+  justify-content: space-between;
+  margin-top: auto;
+  padding: var(--space-3) 0 0;
+}
+.art {
+  height: 150px;
+  background: var(--color-surface-soft);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.items {
+  list-style: none;
+  padding: 0;
+  margin-block: var(--space-4);
+}
+.items li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+}
+.items li span {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.total,
+.titleRow {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  align-items: center;
+}
+.detail {
+  margin-bottom: var(--space-6);
+}
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  gap: var(--space-4);
+}
+.facts dt {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+.facts dd {
+  margin: var(--space-1) 0 0;
+  overflow-wrap: anywhere;
+}
+.history {
+  display: grid;
+  gap: var(--space-4);
+}
+.code {
+  overflow-wrap: anywhere;
+  color: var(--color-muted);
+}
+.successIcon {
+  color: var(--color-success);
+}

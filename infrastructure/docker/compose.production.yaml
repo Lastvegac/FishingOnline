@@ -1,0 +1,77 @@
+name: fishing-world
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: fishing_world
+      POSTGRES_USER: fwo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U fwo -d fishing_world']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes: [redis-data:/data]
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  api:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/api.Dockerfile
+    restart: unless-stopped
+    init: true
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3001
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL with URL-encoded password and host postgres}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET}
+      REDIS_URL: redis://redis:6379
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:?Set exact HTTPS web and admin origins}
+      WEB_ORIGIN: ${WEB_ORIGIN:?Set HTTPS web origin}
+      SMTP_HOST: ${SMTP_HOST:?Set SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_USER: ${SMTP_USER:?Set SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:?Set SMTP_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM:?Set MAIL_FROM}
+      PUBLIC_RELEASE_APPROVED: ${PUBLIC_RELEASE_APPROVED:-false}
+      PAYMENT_ENVIRONMENT: ${PAYMENT_ENVIRONMENT:-disabled}
+      PAYMENT_SUCCESS_URL: ${PAYMENT_SUCCESS_URL:-}
+      PAYMENT_CANCEL_URL: ${PAYMENT_CANCEL_URL:-}
+      PAYMENT_QUERY_IP: ${PAYMENT_QUERY_IP:-}
+      MOMO_PARTNER_CODE: ${MOMO_PARTNER_CODE:-}
+      MOMO_ACCESS_KEY: ${MOMO_ACCESS_KEY:-}
+      MOMO_SECRET_KEY: ${MOMO_SECRET_KEY:-}
+      MOMO_ENDPOINT: ${MOMO_ENDPOINT:-}
+      MOMO_IPN_URL: ${MOMO_IPN_URL:-}
+      VNPAY_TMN_CODE: ${VNPAY_TMN_CODE:-}
+      VNPAY_HASH_SECRET: ${VNPAY_HASH_SECRET:-}
+      VNPAY_PAYMENT_URL: ${VNPAY_PAYMENT_URL:-}
+      VNPAY_QUERY_URL: ${VNPAY_QUERY_URL:-}
+      VNPAY_RETURN_URL: ${VNPAY_RETURN_URL:-}
+      VNPAY_IPN_URL: ${VNPAY_IPN_URL:-}
+      VNPAY_ATM_ENABLED: ${VNPAY_ATM_ENABLED:-false}
+      VNPAY_INTERNATIONAL_CARD_ENABLED: ${VNPAY_INTERNATIONAL_CARD_ENABLED:-false}
+      TRUST_PROXY: ${TRUST_PROXY:-loopback,linklocal,uniquelocal}
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+  web:
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/web.Dockerfile
+    restart: unless-stopped
+    ports: ['127.0.0.1:8080:8080', '127.0.0.1:8081:8081']
+    depends_on: [api]
+volumes:
+  postgres-data:
+  redis-data:

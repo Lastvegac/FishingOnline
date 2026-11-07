@@ -1,0 +1,15 @@
+{
+  "name": "Fishing World Online",
+  "short_name": "Fishing World",
+  "description": "Game câu cá 2D thư giãn, chơi ngay trên trình duyệt điện thoại.",
+  "lang": "vi",
+  "start_url": "/play",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffcd17",
+  "theme_color": "#ffcd17",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

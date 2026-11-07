@@ -1,0 +1,31 @@
+{
+  "name": "@fwo/ui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.tsx",
+    "./styles": "./src/styles.css",
+    "./colors": "./src/colors.ts",
+    "./art-palette": "./src/art-palette.ts",
+    "./lake-3d": "./src/three/lake.ts",
+    "./character-3d": "./src/three/character-studio.ts",
+    "./character-preview": "./src/CharacterPreview.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "lucide-react": "^0.468.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "three": "^0.180.0",
+    "@fwo/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@types/three": "^0.180.0",
+    "typescript": "^5.9.0"
+  }
+}
