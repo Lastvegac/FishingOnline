@@ -1,5 +1,25 @@
 # Project status
 
+## Mồi câu, cấp/XP/avatar và danh tính khi reload — 07/11/2026
+
+- Thả câu khi hết mồi mở modal mua ngay từ shop đúng hồ; tái sử dụng `ShopPurchaseModal` ở tiệm và tại hồ, giữ validation/idempotency/giá/config/ledger backend. Thành công chọn mồi vừa mua, không tự tạo/cast lượt. Phí vào hồ và điểm thu phí hiện có được giữ nguyên; mở/đóng/mua không tạo thêm lượt hay phí.
+- Chỉ dẫn đổi mồi Việt–Anh ngay trên nút và giải thích ở selector. Gameplay đã có bait affinity và ecology authoritative, không sửa phân bố/giá để làm UI. Header/sảnh/hồ sơ hiển thị cấp/XP còn thiếu; canonical `PlayerDto.levelProgress` do server tính bằng engine. Sảnh mobile hiển thị thẻ tiến độ gọn. Lối vào Đổi ảnh đại diện rõ ràng, preview bốn biểu tượng, lưu qua OTP và đồng bộ renderer trên header/sảnh/hồ sơ/bảng xếp hạng.
+- Auth lưu ID kỳ vọng theo tab trong sessionStorage, bearer vẫn chỉ trong memory. Refresh/grant sai danh tính bị từ chối; mismatch không rotate/xóa cookie của người khác, đăng nhập chủ động cập nhật ID. Đã tái hiện thiếu guard bằng cookie lệch; chưa xác định tác nhân đã thay cookie trong trình duyệt của người dùng. Lần đầu chưa có hint hoặc storage bị chặn vẫn có giới hạn nhận diện qua reload.
+- PASS: typecheck toàn workspace, ESLint/Prettier phần sửa, color lint, build web; **31/31** engine unit, **25/25** PostgreSQL integration, **18/18** Chromium desktop/mobile (14 ca theo task và 4 regression UI/form có sẵn). Auth/OTP/avatar dùng API/PostgreSQL thật, UI mua mồi và layout dùng API mock; kiểm Việt–Anh ở 320/390/768/1440px, đã xem ảnh desktop/mobile. Sửa selector regression theo nhãn avatar được dịch; giữ test gốc.
+- Chưa kiểm Safari/thiết bị thật hoặc E2E mua mồi với API thật trong đợt này; integration shop/ledger có sẵn đã qua. Avatar hiện là bốn biểu tượng, chưa upload ảnh cá nhân. Build còn cảnh báo chunk lớn/annotation dependency; pg có cảnh báo deprecation hiện có. Script/test/ảnh/build/server và hai database kiểm thử riêng được dọn; không sửa dữ liệu ứng dụng hoặc lịch sử audit/ledger.
+
+## Cân đối giỏ cá — 07/11/2026
+
+- Giỏ tại hồ dùng shared Modal rộng tối đa 900px; lưới responsive dùng subgrid để đồng bộ các hàng nội dung giữa thẻ, nhãn độ hiếm và nút đổi giữ một dòng. Bố cục thẻ áp dụng cả tab giỏ trong túi đồ.
+- PASS: typecheck web/UI, build web, ESLint phần sửa, color lint; Chromium với API mock ở 320/390/768/1440px Việt–Anh (8 tổ hợp: căn hàng với tên dài, nút/nhãn một dòng, không tràn ngang, xác nhận lồng/Escape/khôi phục focus) và loading/empty/error. Đã xem ảnh desktop/mobile. Build còn cảnh báo dependency/chunk lớn có sẵn. Đã dọn script/ảnh/build/server tạm. Không kiểm Safari/thiết bị thật hoặc giao dịch API thật trong đợt sửa bố cục này.
+
+## Giỏ cá tại hồ và biểu mẫu vận hành — 07/11/2026
+
+- Giỏ cá mở ngay tại hồ từ kết quả hoặc icon header; đóng giỏ để câu tiếp, giữ hồ qua query `location` thay vì rơi về hồ mặc định. Complete lỗi giữ kết quả; chỉ mở giỏ sau complete thành công. Xem/đổi/đóng giỏ không tạo session/cast hoặc thu phí; phí cho lượt mới được ghi rõ, chính sách backend không đổi. Shared Modal chặn cancel lan lên dialog cha.
+- Bốn nhóm thời trang dùng biểu mẫu có nhãn thay JSON, icon bút sửa góc phải trên; mẫu có sẵn, lịch theo múi giờ thiết bị, giá chuỗi, mốc quà thêm/xóa, mã/version tự quản lý. Giữ validation server, RBAC/audit và idempotency.
+- PASS: typecheck web/admin/UI, ESLint phần sửa, build web/admin. Chromium API mock: **4/4** ca editor ở 320/390/768/1440px Việt–Anh (bốn nhóm, required/lịch/lỗi server, precision, UTC/milliseconds, version/idempotency, create, focus/layout); **3/3** ca giỏ ở 320/390/1440px (hồ thu phí, complete lỗi/retry, không tạo lượt khi xem/đổi, dialog/focus/Space, loading/empty/error/retry và chỉ cast rõ ràng mới tạo lượt đúng hồ); **4/4** regression controls/forms có sẵn. Đã xem ảnh desktop/mobile.
+- Không đổi backend/schema/dữ liệu ứng dụng; chưa kiểm API/PostgreSQL thật, Safari/thiết bị thật hoặc E2E gameplay toàn bộ trong lượt này. Color lint, Prettier và diff whitespace PASS; build còn cảnh báo dependency/chunk lớn. Đã dọn script/config/ảnh/build/output và preview server tạm. Giữ suite có trước, cập nhật kỳ vọng giỏ tại hồ trong game regression.
+
 ## UI thanh toán và giữ phiên khi sửa code — 07/11/2026
 
 - Trang thanh toán có tiêu đề gọn, ba chỉ số tổng quan, khu vực lịch sử đơn gom bộ lọc/trạng thái/bảng, xóa lọc và empty state đơn/catalog phù hợp. Dùng shared components/tokens và catalog Việt–Anh; số tiền có đủ chiều rộng trên tablet/mobile. Native reset xóa lỗi validation phía trình duyệt.

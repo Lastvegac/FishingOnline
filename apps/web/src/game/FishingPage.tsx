@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { t as translate, useI18n, localeTag } from '@fwo/ui';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Anchor,
   ArrowLeft,
@@ -19,6 +19,7 @@ import {
   EyeOff,
   SlidersHorizontal,
   Backpack,
+  ChevronDown,
   Users,
   Activity,
   Vibrate,
@@ -63,6 +64,8 @@ import { LakeCharacters } from './LakeCharacters';
 import { useCharacter } from '../character-data';
 import type { LakeParticipantDto } from '@fwo/contracts';
 import { LakeCommunity } from './LakeCommunity';
+import { CatchBasket } from '../CatchBasket';
+import { BaitRestockModal } from './BaitRestockModal';
 import styles from './game.module.css';
 const stateMessages: () => Record<
   string,
@@ -129,6 +132,7 @@ export default function FishingPage() {
   const sessionExpired = useAuth((s) => s.sessionExpired);
   const prefs = usePreferences();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const toast = useToast();
   const [session, setSession] = useState<SessionDto | null>(null);
   const [lastCaught, setLastCaught] = useState<CatchDto>();
@@ -153,10 +157,13 @@ export default function FishingPage() {
   const [tuningOpen, setTuningOpen] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [kitOpen, setKitOpen] = useState(false);
+  const [restockOpen, setRestockOpen] = useState(false);
   const [lakesideOpen, setLakesideOpen] = useState(false);
   const haptics = useRef(createFishingHaptics());
   const scenePanel = useRef<HTMLElement>(null);
   const [resultOpen, setResultOpen] = useState(false);
+  const [basketOpen, setBasketOpen] = useState(false);
+  const castActions = useRef<HTMLDivElement>(null);
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(player.totalFish === 0);
   const visitId = useRef(crypto.randomUUID());
@@ -331,11 +338,25 @@ export default function FishingPage() {
   }, [prefs.sound, prefs.haptics, resumeSound]);
   const selectedLocation =
     locations.data?.items.find(
-      (l) =>
-        l.id ===
-        (session?.locationId ??
-          new URLSearchParams(window.location.search).get('location')),
+      (l) => l.id === (session?.locationId ?? searchParams.get('location')),
     ) ?? locations.data?.items.find((l) => l.unlocked);
+  const selectedLocationId = selectedLocation?.id;
+  useEffect(() => {
+    if (
+      loading ||
+      !selectedLocationId ||
+      searchParams.get('location') === selectedLocationId
+    )
+      return;
+    setSearchParams(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+        next.set('location', selectedLocationId);
+        return next;
+      },
+      { replace: true },
+    );
+  }, [loading, selectedLocationId, searchParams, setSearchParams]);
   const forecast = useQuery({
     queryKey: ['water-conditions', selectedLocation?.id],
     queryFn: () =>
@@ -402,22 +423,24 @@ export default function FishingPage() {
         }
         if (e instanceof ApiError && e.status > 0)
           pendingRequest.current = null;
-        setError((e as Error).message);
+        if (e instanceof ApiError && e.code === 'NO_BAIT') {
+          setKitOpen(false);
+          setRestockOpen(true);
+          void inventory.refetch();
+        } else {
+          setError((e as Error).message);
+        }
         return null;
       } finally {
         releaseFlight();
         if (alive.current) setBusy(hookQueued.current);
       }
     },
-    [update, releaseFlight],
+    [update, releaseFlight, inventory.refetch],
   );
   const start = useCallback(async () => {
     if (inFlight.current) return;
     resumeSound();
-    if (!bait) {
-      toast(translate('ui.choose.bait.before.casting'), 'danger');
-      return;
-    }
     let current = snapshot.current;
     if (current && ['CAUGHT', 'ESCAPED', 'FINISHED'].includes(current.state))
       return;
@@ -425,6 +448,14 @@ export default function FishingPage() {
     if (!location) return;
     if (useAuth.getState().sessionExpired) {
       protectFishing(false);
+      return;
+    }
+    const selected = inventory.data?.items.find(
+      (item) => item.id === bait && item.kind === 'BAIT',
+    );
+    if (!selected?.quantity) {
+      setKitOpen(false);
+      setRestockOpen(true);
       return;
     }
     protectFishing(true);
@@ -448,7 +479,16 @@ export default function FishingPage() {
       if (!snapshot.current || snapshot.current.state === 'IDLE')
         protectFishing(false);
     }
-  }, [bait, selectedLocation, send, toast, aim, power, depth, resumeSound]);
+  }, [
+    bait,
+    inventory.data,
+    selectedLocation,
+    send,
+    aim,
+    power,
+    depth,
+    resumeSound,
+  ]);
   const hook = useCallback(async () => {
     if (
       hookQueued.current ||
@@ -480,7 +520,15 @@ export default function FishingPage() {
     if (!value) haptics.current.stop();
   }, []);
   actionRef.current = (targetAim) => {
-    if (tutorialOpen || kitOpen || resultOpen || leaveOpen) return;
+    if (
+      tutorialOpen ||
+      kitOpen ||
+      restockOpen ||
+      resultOpen ||
+      leaveOpen ||
+      basketOpen
+    )
+      return;
     const current = snapshot.current;
     if (!current || current.state === 'IDLE') {
       if (targetAim !== undefined) setAim(targetAim);
@@ -492,7 +540,9 @@ export default function FishingPage() {
       if (
         tutorialOpen ||
         kitOpen ||
+        restockOpen ||
         resultOpen ||
+        basketOpen ||
         leaveOpen ||
         e.code !== 'Space' ||
         e.repeat ||
@@ -521,7 +571,15 @@ export default function FishingPage() {
       window.removeEventListener('blur', release);
       document.removeEventListener('visibilitychange', release);
     };
-  }, [setHold, tutorialOpen, kitOpen, resultOpen, leaveOpen]);
+  }, [
+    setHold,
+    tutorialOpen,
+    kitOpen,
+    restockOpen,
+    resultOpen,
+    leaveOpen,
+    basketOpen,
+  ]);
   useEffect(() => {
     if (loading || error) return;
     let cancelled = false;
@@ -616,7 +674,6 @@ export default function FishingPage() {
       )
         return;
     }
-    setResultOpen(false);
     update(null);
     setResultOpen(false);
     protectFishing(false);
@@ -642,6 +699,17 @@ export default function FishingPage() {
   const selectedBait = inventory.data?.items.find((i) => i.id === bait);
   const active =
     !!session && !['CAUGHT', 'ESCAPED', 'FINISHED'].includes(phase);
+  const openBasket = async () => {
+    if (busy || active || useAuth.getState().sessionExpired) return;
+    if (snapshot.current) await finish();
+    if (!snapshot.current && useAuth.getState().player) setBasketOpen(true);
+  };
+  const closeBasket = () => {
+    setBasketOpen(false);
+    requestAnimationFrame(() =>
+      castActions.current?.querySelector('button')?.focus(),
+    );
+  };
   useEffect(() => {
     const before = (e: BeforeUnloadEvent) => {
       if (active) {
@@ -658,6 +726,13 @@ export default function FishingPage() {
           title={selectedLocation?.name ?? translate('sim.title')}
           action={
             <div className={styles.headerActions}>
+              <IconButton
+                label={translate('exchange.lakesideOpen')}
+                disabled={busy || active || sessionExpired}
+                onClick={() => void openBasket()}
+              >
+                <Fish size={18} aria-hidden />
+              </IconButton>
               <IconButton
                 label={
                   prefs.sound
@@ -838,20 +913,26 @@ export default function FishingPage() {
                     <Button
                       variant="secondary"
                       className={styles.baitButton}
+                      aria-haspopup="dialog"
+                      aria-expanded={kitOpen}
                       onClick={() => {
                         setHold(false);
                         setKitOpen(true);
                       }}
                     >
                       <Backpack size={17} />
-                      <span>
-                        {selectedBait
-                          ? translate('fishing.baitSummary', {
-                              bait: selectedBait.name,
-                              count: selectedBait.quantity,
-                            })
-                          : translate('ui.your.lakeside.kit')}
+                      <span className={styles.baitLabel}>
+                        <span>
+                          {selectedBait
+                            ? translate('fishing.baitSummary', {
+                                bait: selectedBait.name,
+                                count: selectedBait.quantity,
+                              })
+                            : translate('ui.your.lakeside.kit')}
+                        </span>
+                        <small>{translate('fishing.changeBait')}</small>
                       </span>
+                      <ChevronDown size={15} />
                     </Button>
                     {(phase === 'IDLE' || fighting) && (
                       <IconButton
@@ -1050,7 +1131,7 @@ export default function FishingPage() {
                     </p>
                   </div>
                 )}
-                <div className={styles.actionRow}>
+                <div className={styles.actionRow} ref={castActions}>
                   <BottomActions>
                     {fighting ? (
                       <Button
@@ -1106,7 +1187,6 @@ export default function FishingPage() {
                         disabled={
                           busy ||
                           !['IDLE', 'FINISHED'].includes(phase) ||
-                          !selectedBait?.quantity ||
                           inventory.isPending ||
                           locations.isPending
                         }
@@ -1127,6 +1207,15 @@ export default function FishingPage() {
                       : translate('ui.or.tap.the.lake')}
                   </span>
                 </div>
+                {!active &&
+                  selectedLocation &&
+                  BigInt(selectedLocation.entryFeeGold) > 0n && (
+                    <p className={styles.keyboardHint}>
+                      {translate('fishing.nextCastFee', {
+                        amount: selectedLocation.entryFeeGold,
+                      })}
+                    </p>
+                  )}
                 {phase === 'WAITING' && sim && (
                   <Button
                     variant="ghost"
@@ -1164,6 +1253,23 @@ export default function FishingPage() {
           )}
         </aside>
       </div>
+      {restockOpen && selectedLocation && (
+        <BaitRestockModal
+          locationId={selectedLocation.id}
+          entryFeeGold={selectedLocation.entryFeeGold}
+          preferredSlug={selectedBait?.slug}
+          onClose={() => setRestockOpen(false)}
+          onPurchased={(inventory, item) => {
+            const bought = inventory.items.find(
+              (owned) =>
+                owned.kind === 'BAIT' &&
+                owned.slug === item.itemSlug &&
+                owned.quantity > 0,
+            );
+            if (bought) setBait(bought.id);
+          }}
+        />
+      )}
       <Modal
         open={kitOpen}
         onClose={() => setKitOpen(false)}
@@ -1208,7 +1314,10 @@ export default function FishingPage() {
                     <Check size={13} />
                   </div>
                 ))}
-              <FormField label={translate('ui.bait.for.the.next.cast')}>
+              <FormField
+                label={translate('ui.bait.for.the.next.cast')}
+                help={translate('fishing.baitAttractionHint')}
+              >
                 <Select
                   value={bait}
                   onChange={(e) => setBait(e.target.value)}
@@ -1227,9 +1336,21 @@ export default function FishingPage() {
                 </Select>
               </FormField>
               {!selectedBait?.quantity && (
-                <Notice tone="warning">
-                  {translate('ui.you.are.out.of.bait.visit.the')}{' '}
-                </Notice>
+                <>
+                  <Notice tone="warning">
+                    {translate('fishing.restockDescription')}
+                  </Notice>
+                  <Button
+                    variant="secondary"
+                    disabled={active}
+                    onClick={() => {
+                      setKitOpen(false);
+                      setRestockOpen(true);
+                    }}
+                  >
+                    {translate('fishing.buyBait')}
+                  </Button>
+                </>
               )}
               {sim && (
                 <p>
@@ -1281,13 +1402,12 @@ export default function FishingPage() {
                 variant="secondary"
                 disabled={busy}
                 onClick={async () => {
+                  if (session?.catch?.goldDelivery === 'EXCHANGE') {
+                    await openBasket();
+                    return;
+                  }
                   await finish();
-                  if (!snapshot.current)
-                    navigate(
-                      session?.catch?.goldDelivery === 'EXCHANGE'
-                        ? '/play/inventory?tab=catches'
-                        : '/play',
-                    );
+                  if (!snapshot.current) navigate('/play');
                 }}
               >
                 {session?.catch?.goldDelivery === 'EXCHANGE'
@@ -1370,6 +1490,21 @@ export default function FishingPage() {
             {translate('auth.fishingSessionExpired')}
           </Notice>
         )}
+      </Modal>
+      <Modal
+        open={basketOpen}
+        onClose={closeBasket}
+        title={translate('exchange.lakesideOpen')}
+        size="wide"
+        footer={
+          <Button onClick={closeBasket}>
+            <Anchor size={16} aria-hidden />
+            {translate('ui.keep.fishing')}
+          </Button>
+        }
+      >
+        <Notice>{translate('exchange.lakesideHint')}</Notice>
+        {basketOpen && <CatchBasket onContinueFishing={closeBasket} />}
       </Modal>
       <Modal
         open={tutorialOpen}

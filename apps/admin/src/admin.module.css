@@ -535,9 +535,58 @@ td button {
   padding-top: var(--space-2);
   font-weight: 600;
 }
-.fashionCard > :global(.fwo-bottom-actions) {
-  padding: var(--space-3) 0 0;
-  justify-content: flex-start;
+.fashionCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.fashionCardHeader h3,
+.fashionCardHeader h4 {
+  min-width: 0;
+  margin: 0;
+  padding-top: var(--space-2);
+}
+.fashionCardHeader > button {
+  flex-shrink: 0;
+  color: var(--color-muted);
+}
+.fashionFieldset {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  margin: 0 0 var(--space-6);
+}
+.fashionFieldset + .fashionFieldset {
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+.fashionFieldset legend {
+  font-size: 15px;
+  font-weight: 650;
+  margin-bottom: var(--space-4);
+  padding: 0;
+}
+.fashionFieldset > p {
+  font-size: 12px;
+}
+.fashionFormGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+.fashionTier {
+  padding: var(--space-4);
+  margin-bottom: var(--space-3);
+  background: var(--color-surface-soft);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+@media (max-width: 600px) {
+  .fashionFormGrid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
 }
 .positive,
 .negative {

@@ -165,7 +165,7 @@ test('shared controls: focus, icon, modal scroll, keyboard và mobile menu', asy
   await expect(trigger).toBeFocused();
 
   await page.goto('/play/profile');
-  const avatar = page.getByRole('button', { name: 'Avatar 2' });
+  const avatar = page.getByRole('button', { name: 'Ảnh đại diện 2' });
   await avatar.click();
   await expect(avatar).toHaveAttribute('aria-pressed', 'true');
   expect(

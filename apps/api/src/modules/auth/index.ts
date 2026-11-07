@@ -453,6 +453,14 @@ export function registerAuth(ctx: Context) {
           where: { tokenHash: hash(oldToken) },
         });
         if (!first) return null;
+        const expectedUser = request.headers['x-fwo-user-id'];
+        // This hint only restricts restoration; it never grants authority.
+        // Reject before rotation and preserve the cookie belonging to another login.
+        assert(
+          expectedUser === undefined || expectedUser === first.userId,
+          401,
+          'SESSION_ACCOUNT_CHANGED',
+        );
         await lockPlayer(tx, first.userId);
         const current = await tx.userSession.findUniqueOrThrow({
           where: { id: first.id },

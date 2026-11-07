@@ -589,6 +589,9 @@ textarea.fwo-input {
   box-shadow: var(--shadow-modal);
   overflow: hidden;
 }
+.fwo-modal--wide {
+  width: min(900px, calc(100% - 32px));
+}
 .fwo-modal[open] {
   display: flex;
   flex-direction: column;

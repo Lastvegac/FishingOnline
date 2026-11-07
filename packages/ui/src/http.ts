@@ -45,6 +45,7 @@ const errorKeys: Partial<Record<string, MessageKey>> = {
   NETWORK_ERROR: 'network.unavailable',
   INVALID_RESPONSE: 'network.invalidResponse',
   INVALID_CREDENTIALS: 'auth.invalidCredentials',
+  SESSION_ACCOUNT_CHANGED: 'auth.accountChanged',
   RATE_LIMITED: 'auth.rateLimited',
   ACCOUNT_RATE_LIMITED: 'auth.rateLimited',
   EMAIL_TAKEN: 'auth.emailUsed',
@@ -77,7 +78,11 @@ export class ApiError extends Error {
           key &&
           (getLocale() === 'en' ||
             key.startsWith('sim.error.') ||
-            ['NETWORK_ERROR', 'INVALID_RESPONSE'].includes(this.code))
+            [
+              'NETWORK_ERROR',
+              'INVALID_RESPONSE',
+              'SESSION_ACCOUNT_CHANGED',
+            ].includes(this.code))
         )
           return translate(key);
         return localizeMessage(message);
@@ -86,6 +91,35 @@ export class ApiError extends Error {
   }
 }
 export function createApiClient() {
+  // A non-secret identity hint survives reloads in this tab. Never persist JWTs.
+  const identityKey = 'fwo-auth:expected-user';
+  const subject = (value: string | null): string | null => {
+    if (!value) return null;
+    try {
+      const payload = value
+        .split('.')[1]!
+        .replaceAll('-', '+')
+        .replaceAll('_', '/');
+      const claims = JSON.parse(atob(payload));
+      return typeof claims.sub === 'string' ? claims.sub : null;
+    } catch {
+      return null;
+    }
+  };
+  let expectedUser: string | null = null;
+  try {
+    expectedUser = globalThis.sessionStorage?.getItem(identityKey) ?? null;
+  } catch {
+    /* Storage can be unavailable; the in-memory check still applies. */
+  }
+  const rememberUser = (value: string) => {
+    expectedUser = value;
+    try {
+      globalThis.sessionStorage?.setItem(identityKey, value);
+    } catch {
+      /* Keep the in-memory identity when storage is blocked. */
+    }
+  };
   let token: string | null = null;
   let refreshFlight: Promise<boolean> | null = null;
   let refreshAbort: AbortController | null = null;
@@ -130,7 +164,11 @@ export function createApiClient() {
         res = await fetch('/api/v1/auth/refresh', {
           method: 'POST',
           credentials: 'include',
-          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf },
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrf,
+            ...(expectedUser ? { 'X-Fwo-User-Id': expectedUser } : {}),
+          },
           body: '{}',
           signal: controller.signal,
         });
@@ -159,6 +197,12 @@ export function createApiClient() {
           res.status,
         );
       if (generation !== startedGeneration) return false;
+      const restoredUser = subject(json.data.accessToken);
+      if (expectedUser && restoredUser !== expectedUser) {
+        refreshRejected = true;
+        return false;
+      }
+      if (restoredUser) rememberUser(restoredUser);
       token = json.data.accessToken;
       refreshRejected = false;
       unauthorizedNotified = false;
@@ -216,6 +260,7 @@ export function createApiClient() {
         signal: options.signal,
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(expectedUser ? { 'X-Fwo-User-Id': expectedUser } : {}),
           ...(deviceTimeZone ? { 'X-Time-Zone': deviceTimeZone } : {}),
           ...(options.body !== undefined
             ? { 'Content-Type': 'application/json' }
@@ -345,6 +390,10 @@ export function createApiClient() {
       refreshFlight = null;
       generation++;
       token = value;
+      // Only explicit sign-in may replace the tab's expected account. Retain the
+      // hint after expiry so another account's cookie cannot silently sign in.
+      const user = subject(value);
+      if (user) rememberUser(user);
       refreshRejected = false;
       unauthorizedNotified = false;
     },

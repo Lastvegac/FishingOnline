@@ -84,6 +84,8 @@ import {
 } from './pages';
 import { LakeArt } from './art';
 import { PaymentUpdates, PaymentsPage } from './payments';
+import { PlayerAvatar } from './PlayerAvatar';
+import { PlayerProgress } from './PlayerProgress';
 import styles from './app.module.css';
 import { useCharacter } from './character-data';
 const CharacterPage = lazy(() => import('./CharacterPage'));
@@ -268,14 +270,25 @@ function Shell() {
                 value0: player.username,
               })}
             >
-              <span className={styles.avatar}>
-                {player.username.charAt(0).toUpperCase()}
-              </span>
+              <PlayerAvatar
+                avatarKey={player.avatarKey}
+                username={player.username}
+              />
               <span>
-                {player.username}
+                <span className={styles.userChipName}>{player.username}</span>
                 <small>
-                  {translate('ui.angler.level')} {player.level}
+                  {translate('profile.currentLevel', { level: player.level })}
                 </small>
+                {player.levelProgress && (
+                  <small>
+                    {translate('profile.xpRemaining', {
+                      xp: player.levelProgress.remainingXp.toLocaleString(
+                        localeTag(),
+                      ),
+                      level: player.levelProgress.nextLevel,
+                    })}
+                  </small>
+                )}
               </span>
               <ChevronRight size={15} />
             </Link>
@@ -413,8 +426,6 @@ function Lobby() {
   const player = useAuth((s) => s.player)!;
   const navigate = useNavigate();
   const missions = useMissions();
-  const levelBase = (player.level - 1) ** 2 * 100;
-  const next = player.level ** 2 * 100;
   return (
     <>
       <PageHeader
@@ -470,23 +481,20 @@ function Lobby() {
             <Sprout size={18} />
           </div>
           <div className={styles.profileSummary}>
-            <span className={styles.profileAvatar}>
-              {player.username.charAt(0).toUpperCase()}
-            </span>
+            <PlayerAvatar
+              avatarKey={player.avatarKey}
+              username={player.username}
+              className={styles.profileAvatar}
+            />
             <h3>{player.username}</h3>
-            <Badge tone="uncommon">
-              {translate('ui.angler.level')} {player.level}
-            </Badge>
           </div>
-          <div className={styles.xpRow}>
-            <span>
-              {translate('ui.journey.to.level')} {player.level + 1}
-            </span>
-            <span>
-              {player.totalXp - levelBase} / {next - levelBase} XP
-            </span>
-          </div>
-          <Progress value={player.totalXp - levelBase} max={next - levelBase} />
+          <PlayerProgress player={player} />
+          <Button
+            variant="secondary"
+            onClick={() => navigate('/play/profile#profile-avatar')}
+          >
+            {translate('profile.changeAvatar')}
+          </Button>
           <div className={styles.journalStats}>
             <div>
               <Fish size={19} />

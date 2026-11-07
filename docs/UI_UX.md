@@ -1,5 +1,11 @@
 # UI/UX — Sitemap, user flow và design system
 
+## Cập nhật runtime — 07/11/2026: mồi, cấp và avatar
+
+- Nút mồi tại hồ có chỉ dẫn bấm đổi và mũi tên; selector giải thích các loại mồi thu hút loài cá khác nhau, không hứa bảo đảm bắt được cá. Đang câu không đổi snapshot mồi.
+- Thả câu khi hết mồi mở modal cảnh báo/mua tại đúng hồ. Chọn mồi/gói, thấy tổng Gold, lỗi field/thiếu Gold, loading/empty/error và retry; mua xong chọn mồi mới nhưng chỉ thả khi người chơi bấm lại. Giá/phí vào hồ không đổi và không phát sinh lượt/phí từ việc xem/mua.
+- Header luôn hiện cấp/XP còn thiếu, cả trên mobile. Sảnh và hồ sơ có thanh XP từ server; sảnh mobile dùng thẻ tiến độ gọn trước hồ. CTA Đổi ảnh đại diện dẫn tới lựa chọn bốn biểu tượng và xác nhận OTP; avatar đã lưu đồng bộ trên các khu vực tài khoản/bảng xếp hạng.
+
 Ngày: 07/11/2026. Đây là tài liệu thiết kế, chưa có màn hình hoặc component được triển khai. Repo ban đầu trống, không có shared exports hoặc nearby screen để tái sử dụng; khi bắt đầu UI phải tạo nền dùng chung trong `packages/ui`, sau đó tái sử dụng cho mọi screen/state và kiểm tra exports trước khi thêm component. Tham chiếu workflow: `/Users/hanguyen/.codex/skills/reuse-app-components/SKILL.md`. Không áp dụng tên component/theme Flutter Smartos vào React.
 
 ## 1. Sitemap
@@ -50,9 +56,13 @@ Hiển thị banner có trạng thái và retry; khóa thao tác mutation khi ch
 
 ### Túi đồ có hai tab — 07/11/2026
 
+Giỏ cá tại hồ dùng Modal `size="wide"`, tối đa 900px và chừa lề màn hình; các dialog xác nhận vẫn dùng kích thước mặc định. Lưới giỏ tự giảm số cột theo chiều rộng khả dụng. Các thẻ cùng hàng đồng bộ vị trí khung ảnh, độ hiếm, tên, trọng lượng và hàng đổi Gold; tên dài được xuống dòng, nhãn độ hiếm và nút Đổi cá giữ một dòng. Ảnh thật giữ toàn bộ tỷ lệ qua FishArt.
+
 `/play/inventory` mặc định mở **Trang bị**; tab **Giỏ cá của bạn** chỉ hiển thị giỏ cá và luồng đổi Gold. Bộ lọc cần/dây/lưỡi/mồi cùng lối tắt tủ đồ nằm trong tab Trang bị, không đẩy giỏ xuống dưới danh sách vật phẩm. Tab dùng shared `Tabs`, nhãn Việt–Anh và trạng thái chọn có tên truy cập riêng.
 
-Nút **Mở giỏ cá** ở kết quả câu chuyển tới `/play/inventory?tab=catches`. URL giữ tab khi tải lại và khi dùng Back/Forward; đổi tab giữ các query parameter khác và bộ lọc trang bị trong lần xem. `/play/equipment` vẫn dành riêng cho trang bị. Mỗi tab giữ loading/empty/error/retry và dialog hiện có; chỉ mount giỏ khi chọn tab đó.
+Nút **Mở giỏ cá** ở kết quả câu hoàn tất lượt đã kết thúc rồi mở giỏ bằng shared `Modal` ngay tại hồ; header hồ cũng có icon giỏ cá khi không có lượt đang câu. Xem/đổi cá không tạo session mới hoặc thu phí; đóng giỏ để câu tiếp, giữ hồ, mồi và thiết lập ném. URL `?location=<id>` giữ đúng hồ thực tế, kể cả khi resume lượt rồi đóng kết quả. Lỗi complete giữ kết quả để thử lại. Escape trong xác nhận đổi chỉ đóng xác nhận; Escape tiếp theo mới đóng giỏ. Hồ có phí hiển thị phí của lượt thả câu mới; backend vẫn thu phí khi tạo session, không đổi thành phí theo thời gian ở hồ.
+
+Giỏ vẫn truy cập được từ `/play/inventory?tab=catches`. URL giữ tab khi tải lại và khi dùng Back/Forward; đổi tab giữ các query parameter khác và bộ lọc trang bị trong lần xem. `/play/equipment` vẫn dành riêng cho trang bị. Mỗi tab giữ loading/empty/error/retry và dialog hiện có; chỉ mount giỏ khi chọn tab đó.
 
 ### Màn câu gọn và phản hồi thư giãn — 07/11/2026
 

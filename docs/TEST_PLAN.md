@@ -1,5 +1,17 @@
 # Test Plan và release gates
 
+## Cân đối giỏ cá — 07/11/2026
+
+- Kiểm Việt–Anh ở 320/390/768/1440px: modal tại hồ tối đa 900px; lưới tự giảm cột, không tràn ngang, nhãn độ hiếm/nút Đổi cá một dòng; ảnh/tên/trọng lượng/hàng đổi Gold thẳng hàng khi tên dài hoặc một cá vượt hạn mức. Giữ ảnh thật đầy đủ và footer câu tiếp nhìn thấy được.
+- Kiểm loading/empty/error, xác nhận đổi/Escape/khôi phục focus; kết quả thực tế và giới hạn ở PROJECT_STATUS.
+
+## Giỏ cá tại hồ và biểu mẫu thời trang — 07/11/2026
+
+- Resume kết quả ở hồ thu phí không phải hồ mặc định; mở giỏ hoàn tất đúng lượt, URL/hồ/mồi/thiết lập ném giữ nguyên. Xem/đổi/hủy/đóng giỏ và Space trong giỏ không tạo session/cast hoặc thu thêm phí. Chỉ bấm thả câu tiếp mới tạo session tại đúng hồ, phí được hiển thị trước; active cast chặn mở giỏ. Complete lỗi giữ kết quả và thử lại được.
+- Giỏ loading/empty/error/retry/populated, xác nhận đổi, Escape chỉ đóng dialog trên cùng và trả focus; không tràn ngang ở mobile, Việt–Anh.
+- Bốn nhóm thời trang mở bằng icon bút góc phải trên, không yêu cầu JSON/mã/version. Kiểm required/lịch sai/lỗi server tại field rồi sửa; giá lớn giữ chuỗi chính xác, giờ local chuyển UTC và giờ không sửa giữ milliseconds; payload đúng canonical schema, version, lý do/idempotency và bỏ metadata DTO. Kiểm thêm mốc quà/tạo vật phẩm miễn phí và footer ở màn hẹp.
+- Kết quả thực tế và giới hạn API mock nằm trong PROJECT_STATUS; không suy ra giao dịch thật hoặc cân bằng economy từ kiểm tra UI.
+
 ## Sửa UI quản trị — 07/11/2026
 
 Nghiệm thu: thẻ thời trang dịch tên/slot/cách mở khóa Việt–Anh, giá Gold/Kim cương/miễn phí đúng loại và không chồng nút ở 320/390/1440px; loại trang bị dịch ở bảng. Sổ cái hiển thị tên/ID chủ ví, tìm theo tên/ID người chơi/ID ví và chi tiết tham chiếu. API join đúng chủ ví, không lộ thông tin liên hệ; SUPER_ADMIN/SUPPORT được xem, PLAYER/GAME_ADMIN/ANALYST bị từ chối; không thay ledger/số dư. Bộ lọc đơn hàng có placeholder UUID theo locale. Kiểm loading/empty/error và dialog; kết quả thực tế tại PROJECT_STATUS.
@@ -120,6 +132,12 @@ Giữ `apps/api/test/payments.test.ts`, `payments.integration.test.ts`, `payment
 
 Khôi phục phiên web/admin: reload giữ URL khi refresh cookie còn hợp lệ; HMR giữ client/store/cache và React root, bootstrap đồng thời không nhân refresh. Giả lập API restart bằng network/429/5xx tại refresh và identity: retry tối đa ba lần; lỗi kéo dài hiện retry tại URL cũ, không về login. Retry identity tái sử dụng access token đã lấy; refresh 401/403 vẫn yêu cầu login. Bootstrap HMR không xóa context lượt câu đang được bảo vệ. Kiểm desktop/mobile; không đưa bearer vào localStorage/sessionStorage.
 
+Danh tính sau reload: đăng nhập A rồi reload vẫn là A; thay cookie bằng phiên B rồi reload phải về login, không nạp dữ liệu B và không rotate/revoke cookie B. Đăng nhập chủ động B sau đó được cập nhật hint; bearer/grant thuộc người khác bị chặn khi gửi hint A. Kiểm cả khi refresh diễn ra trong phiên, không chỉ bootstrap; ID hint trong sessionStorage không phải token và không thay quyền server.
+
+Hết mồi tại hồ: Thả câu vẫn khả dụng và mở modal; không tạo session/cast hay thu entry fee khi mở/đóng/mua. Kiểm số gói rỗng/ngoài giới hạn, thiếu Gold, loading/empty/error và retry cùng idempotency key. Thành công chọn mồi vừa mua, giữ location/fee và chỉ tạo lượt khi người chơi bấm Thả câu lại. Nút mồi có chỉ dẫn Việt–Anh, mở selector và giải thích ảnh hưởng của mồi; đổi lựa chọn truyền đúng inventory ID vào phiên tiếp theo. Engine regression phân bố theo mồi phải tiếp tục pass.
+
+Cấp/XP/avatar: `/users/me` trả `levelProgress` từ server, khớp ranh giới 0/99/100/399/400 XP của engine. Header vẫn hiện cấp và XP còn thiếu trên màn nhỏ; sảnh/hồ sơ có thanh tiến độ và CTA Đổi ảnh đại diện. Thay biểu tượng → Lưu → OTP → reload giữ avatar mới trên header/hồ sơ. Kiểm Việt–Anh và không tràn ở 320/390/768/1440px; giữ validation/OTP hiện có và không cho client sửa XP/cấp.
+
 Nghiệm thu: refresh JWT tự động trước hạn/401 với idempotency key giữ nguyên; request đồng thời chỉ một refresh trong tab, tab cùng origin serialize qua Web Locks. Network/429/5xx không xóa auth; login sai không logout; logout 204 không cần JSON. Refresh rolling/absolute hết hạn giữa cast→hook→fight vẫn đọc/điều khiển/complete được đúng lượt; cookie-only reload `/play/fishing` khôi phục context. Không tạo/cast lượt mới, truy cập wallet/shop/admin hoặc dùng grant như bearer/payment socket. CSRF/ownership/reuse/logout/account suspension chặn grant; complete replay chỉ một catch/progression. Kết quả giữ trên màn cho đến khi đóng; lúc đó mới login lại. Deadline grant cố định, engine vẫn timeout bình thường. Browser kiểm WAITING/BITE/FIGHTING ở desktop/mobile, gồm reload và đóng kết quả.
 
 ## Character/fashion acceptance (07/11/2026)
@@ -132,7 +150,7 @@ Nghiệm thu nhân vật/fashion trong đợt này dùng PostgreSQL thật và C
 - Outfit tối thiểu 10, membership hiệu lực 20; expiry giữ outfit đã lưu, không cho tạo thêm khi quá capacity; private outfit không lộ qua share/community, equip chỉ chủ sở hữu và kiểm entitlement/version.
 - Event có snapshot, một entry/vote mỗi account, không tự vote; quà/pass claim đúng một lần. Pass tính cá mới sau enroll, premium phải mua, điều khoản đã bắt đầu không đổi.
 - Presence hai account hiển thị đúng rig/ngoại hình/tên trong canvas và danh sách; lease/sequence/speed/room bounds; client không giả animation CATCH/không di chuyển khi active fishing.
-- Studio kiểm tên trống → sửa hợp lệ, thử item chưa sở hữu → bị chặn save, mua → lưu bộ → equip → reload → vào hồ; admin JSON lỗi inline → sửa → lưu, bảng metrics và narrow viewport. Không có pageerror hoặc lỗi THREE trong flow nghiệm thu.
+- Studio kiểm tên trống → sửa hợp lệ, thử item chưa sở hữu → bị chặn save, mua → lưu bộ → equip → reload → vào hồ; admin biểu mẫu lỗi tại field → sửa → lưu, bảng metrics và narrow viewport. Không có pageerror hoặc lỗi THREE trong flow nghiệm thu.
 - Gate chưa đo: mọi tổ hợp clipping, 12 người trên GPU mobile thật, Safari/WebKit, tốc độ mạng, FPS/draw calls, merchant sandbox thật và cân bằng giá theo cohort.
 
 ## Ảnh cá và độ hiếm admin (07/11/2026)

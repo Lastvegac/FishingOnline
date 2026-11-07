@@ -533,12 +533,14 @@ export function Modal({
   title,
   children,
   footer,
+  size = 'default',
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  size?: 'default' | 'wide';
 }) {
   useI18n();
   const dialog = useRef<HTMLDialogElement>(null);
@@ -557,10 +559,11 @@ export function Modal({
   return (
     <dialog
       ref={dialog}
-      className="fwo-modal"
+      className={`fwo-modal${size === 'wide' ? ' fwo-modal--wide' : ''}`}
       aria-labelledby={titleId}
       onCancel={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         onClose();
       }}
       onClick={(e) => {

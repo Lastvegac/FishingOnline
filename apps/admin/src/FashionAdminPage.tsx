@@ -1,14 +1,11 @@
 import { useState, useId } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Pencil, Plus } from 'lucide-react';
 import {
-  ApiError,
   Button,
   Card,
-  Form,
-  FormError,
-  FormField,
-  Textarea,
-  Input,
+  IconButton,
+  RarityBadge,
   Tabs,
   BottomActions,
   LoadingState,
@@ -28,6 +25,7 @@ import type {
   CosmeticDto,
 } from '@fwo/contracts';
 import styles from './admin.module.css';
+import { FashionEditor } from './FashionEditor';
 type AdminData = CharacterCatalogDto & {
   collections: FashionCollectionDto[];
   events: FashionEventDto[];
@@ -44,8 +42,8 @@ export function FashionAdminPage({
     cache = useQueryClient(),
     formId = useId();
   const [tab, setTab] = useState('items'),
-    [editing, setEditing] = useState<Record<string, unknown> | null>(null),
-    [localError, setLocalError] = useState<Error | null>(null);
+    [editing, setEditing] = useState<Record<string, unknown> | null>(null);
+  const [saveKey, setSaveKey] = useState(crypto.randomUUID());
   const query = useQuery({
     queryKey: ['admin-fashion'],
     queryFn: () => api.request<AdminData>('/admin/fashion'),
@@ -80,6 +78,7 @@ export function FashionAdminPage({
     }) =>
       api.request(`/admin/fashion/${tab}`, {
         method: ['events', 'passes'].includes(tab) ? 'POST' : 'PUT',
+        idempotencyKey: saveKey,
         body: { ...data, reason },
       }),
     onSuccess: async () => {
@@ -94,7 +93,7 @@ export function FashionAdminPage({
     );
   const create = () => {
     save.reset();
-    setLocalError(null);
+    setSaveKey(crypto.randomUUID());
     const now = new Date(),
       later = new Date(now.getTime() + 7 * 86400000);
     setEditing(
@@ -148,6 +147,7 @@ export function FashionAdminPage({
     );
   };
   const edit = (row: unknown) => {
+    setSaveKey(crypto.randomUUID());
     const data = { ...(row as Record<string, unknown>) };
     delete data.owned;
     delete data.createdAt;
@@ -159,7 +159,6 @@ export function FashionAdminPage({
     delete data.entered;
     delete data.claimed;
     delete data.entries;
-    setLocalError(null);
     save.reset();
     setEditing(data);
   };
@@ -199,7 +198,10 @@ export function FashionAdminPage({
         <>
           {canEdit && (
             <BottomActions>
-              <Button onClick={create}>{t('fashion.adminCreate')}</Button>
+              <Button onClick={create}>
+                <Plus size={16} aria-hidden />
+                {t(`fashion.editor.create.${tab}` as Parameters<typeof t>[0])}
+              </Button>
             </BottomActions>
           )}
           {!rows.length ? (
@@ -208,8 +210,23 @@ export function FashionAdminPage({
             <div className="fwo-fashion-admin-grid">
               {rows.map((row) => (
                 <Card padded key={row.id} className={styles.fashionCard}>
-                  <h3>{'assetId' in row ? itemName(row) : row.name}</h3>
-                  {'assetId' in row && <small>{row.id}</small>}
+                  <div className={styles.fashionCardHeader}>
+                    <h3>{'assetId' in row ? itemName(row) : row.name}</h3>
+                    <IconButton
+                      label={t('fashion.editor.editNamed', {
+                        name: 'assetId' in row ? itemName(row) : row.name,
+                      })}
+                      disabled={!canEdit}
+                      onClick={() => edit(row)}
+                    >
+                      <Pencil size={18} aria-hidden />
+                    </IconButton>
+                  </div>
+                  {'rarity' in row && (
+                    <div>
+                      <RarityBadge rarity={row.rarity} />
+                    </div>
+                  )}
                   <p>
                     {'slot' in row
                       ? t('fashion.adminItemSummary', {
@@ -237,15 +254,6 @@ export function FashionAdminPage({
                       t('fashion.diamonds', { count: row.priceDiamonds })
                     ) : null}
                   </div>
-                  <BottomActions>
-                    <Button
-                      variant="secondary"
-                      disabled={!canEdit}
-                      onClick={() => edit(row)}
-                    >
-                      {t('fashion.adminEdit')}
-                    </Button>
-                  </BottomActions>
                 </Card>
               ))}
             </div>
@@ -344,7 +352,11 @@ export function FashionAdminPage({
         onClose={() => {
           if (!save.isPending) setEditing(null);
         }}
-        title={t('fashion.adminEdit')}
+        title={t(
+          `fashion.editor.${editing?.id ? 'edit' : 'create'}.${tab}` as Parameters<
+            typeof t
+          >[0],
+        )}
         footer={
           <>
             <Button
@@ -355,64 +367,24 @@ export function FashionAdminPage({
               {t('character.cancel')}
             </Button>
             <Button type="submit" form={formId} loading={save.isPending}>
-              {t('fashion.adminSave')}
+              {t('fashion.editor.save')}
             </Button>
           </>
         }
       >
         {editing && (
-          <Form
+          <FashionEditor
+            key={`${tab}:${editing.id ?? 'new'}`}
             id={formId}
-            error={localError ?? save.error}
-            onSubmit={(e) => {
-              e.preventDefault();
-              const data = new FormData(e.currentTarget);
-              let parsed: Record<string, unknown>;
-              try {
-                parsed = JSON.parse(String(data.get('item')));
-                if (
-                  !parsed ||
-                  Array.isArray(parsed) ||
-                  typeof parsed !== 'object'
-                )
-                  throw new Error();
-              } catch {
-                setLocalError(
-                  new ApiError(
-                    'INVALID_JSON',
-                    t('fashion.invalidJson'),
-                    400,
-                    undefined,
-                    { item: [t('fashion.invalidJson')] },
-                  ),
-                );
-                return;
-              }
-              setLocalError(null);
-              save.mutate({ data: parsed, reason: String(data.get('reason')) });
-            }}
-          >
-            <Notice>{t('fashion.adminAssetPolicy')}</Notice>
-            <FormField label={t('fashion.adminJson')} required>
-              <Textarea
-                name="item"
-                required
-                rows={18}
-                defaultValue={JSON.stringify(editing, null, 2)}
-                disabled={save.isPending}
-              />
-            </FormField>
-            <FormField label={t('fashion.adminReason')} required>
-              <Input
-                name="reason"
-                required
-                minLength={5}
-                maxLength={1000}
-                disabled={save.isPending}
-              />
-            </FormField>
-            <FormError error={localError ?? save.error} />
-          </Form>
+            tab={tab}
+            editing={editing}
+            cosmetics={query.data.cosmetics}
+            collections={query.data.collections}
+            pending={save.isPending}
+            error={save.error}
+            onChange={() => setSaveKey(crypto.randomUUID())}
+            onSubmit={(data, reason) => save.mutate({ data, reason })}
+          />
         )}
       </Modal>
     </>

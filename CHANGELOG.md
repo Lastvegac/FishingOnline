@@ -1,5 +1,22 @@
 # Changelog
 
+## 2026-11-07 — Mồi câu, tiến độ cấp và ảnh đại diện
+
+- Hết mồi vẫn bấm Thả câu để mở modal cảnh báo/mua ngay tại hồ; dùng chung form xác nhận mua với tiệm đồ câu, tự chọn mồi vừa mua và giữ nguyên địa điểm/phí cho lượt tiếp theo. Mở/đóng/mua không tạo lượt hay thu thêm phí.
+- Nút mồi có chỉ dẫn “Bấm để đổi mồi”, mũi tên và giải thích Việt–Anh về loài cá bị thu hút; giữ cơ chế bait affinity/ecology trên server.
+- Header hiện cấp và XP còn thiếu trên mobile/desktop; sảnh/hồ sơ dùng chung thanh tiến độ nhận từ `PlayerDto.levelProgress` do server tính. Sảnh mobile có thẻ tiến độ gọn và nút Đổi ảnh đại diện. Bốn biểu tượng hiện có vẫn xác nhận OTP; avatar đã lưu hiển thị đồng bộ trên header, sảnh, hồ sơ và bảng xếp hạng.
+- Gắn khôi phục phiên với ID tài khoản trong tab (không lưu token), chặn cookie/grant thuộc tài khoản khác trước khi nhận danh tính. Cookie lệch đưa về login thay vì tự đổi tài khoản; không rotate cookie của tài khoản khác.
+
+## 2026-11-07 — Cân đối giỏ cá
+
+- Modal giỏ cá tại hồ rộng tối đa 900px qua tùy chọn `wide` của shared Modal. Lưới tự giảm cột theo không gian; ảnh, độ hiếm, tên, trọng lượng và hàng đổi Gold thẳng hàng giữa các thẻ, kể cả tên dài. Nút “Đổi cá” giữ một dòng.
+
+## 2026-11-07 — Giỏ cá tại hồ và biểu mẫu vận hành
+
+- Kết quả câu mở giỏ ngay trong hồ; thêm icon giỏ ở header, giữ hồ qua URL và đóng giỏ để câu tiếp. Xem/đổi cá không tạo lượt/thu thêm phí; hiển thị phí lượt thả câu mới theo chính sách backend hiện có.
+- Sửa Escape trong dialog lồng chỉ đóng dialog trên cùng.
+- Quản trị thời trang dùng biểu mẫu vật phẩm/bộ sưu tập/sự kiện/pass thay JSON; icon bút sửa góc phải trên, mã/version tự quản lý, lịch giờ thiết bị, validation và nhãn Việt–Anh. Giữ RBAC/audit/idempotency và giá dạng chuỗi chính xác.
+
 ## 2026-11-07 — Gọn trang thanh toán và giữ phiên web/admin
 
 - Thu gọn typography và khoảng cách; đưa số liệu tổng quan lên đầu, gom bộ lọc/trạng thái/lịch sử đơn, thêm xóa lọc và empty state đơn/catalog. Số tiền đọc được trên màn hình hẹp; nhãn Việt–Anh và shared components/tokens.

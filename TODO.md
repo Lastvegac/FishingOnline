@@ -1,5 +1,22 @@
 # TODO
 
+## Mồi câu, tiến độ cấp và avatar — 07/11/2026
+
+- [x] Hết mồi vẫn mở được modal mua ngay tại hồ; dùng lại form cửa hàng, giữ địa điểm/phí và không tự tạo lượt khi mua.
+- [x] Hướng dẫn đổi mồi trên nút và giải thích ảnh hưởng của mồi; giữ engine bait affinity/ecology hiện có.
+- [x] Hiện cấp/XP còn thiếu trên mobile/desktop bằng tiến độ server; sảnh có CTA Đổi ảnh đại diện, lưu bốn biểu tượng qua OTP và đồng bộ avatar.
+- [x] Chặn khôi phục tài khoản khác khi cookie lệch; không lưu bearer trong browser storage. Kiểm auth thật và mua/đổi mồi/cấp/avatar trên Chromium desktop/mobile, giữ regression cũ.
+
+## Cân đối giỏ cá — 07/11/2026
+
+- [x] Mở rộng modal giỏ tại hồ, tự giảm số cột trên màn hẹp, căn các hàng nội dung giữa thẻ và giữ nút Đổi cá một dòng; kiểm Chromium Việt–Anh ở 320/390/768/1440px, dialog lồng và các trạng thái tải dữ liệu.
+
+## Giỏ cá tại hồ và biểu mẫu vận hành — 07/11/2026
+
+- [x] Mở/đổi cá ngay tại hồ, đóng giỏ để câu tiếp; giữ đúng hồ khi kết thúc lượt và hiển thị phí cho lượt mới, không tạo lượt/thu phí khi xem giỏ.
+- [x] Thay editor JSON thời trang bằng biểu mẫu bốn nhóm; icon bút sửa góc phải, mã/version tự quản lý, validation Việt–Anh.
+- [x] Kiểm Chromium desktop/mobile Việt–Anh với API mock, dialog lồng/focus và regression shared UI/form; chưa nghiệm thu Safari/thiết bị thật hoặc API thật trong lượt này.
+
 ## UI thanh toán và giữ phiên — 07/11/2026
 
 - [x] Thu gọn trang thanh toán, responsive số tiền/bộ lọc/trạng thái, xóa lọc và empty state Việt–Anh.

@@ -283,6 +283,12 @@ export async function buildApp(options: AppOptions = {}) {
           }
         : ((await fishingPrincipal(ctx, request)) ?? undefined);
       assert(request.principal, 401, 'UNAUTHENTICATED');
+      const expectedUser = request.headers['x-fwo-user-id'];
+      assert(
+        expectedUser === undefined || expectedUser === request.principal.id,
+        401,
+        'SESSION_ACCOUNT_CHANGED',
+      );
       if (request.principal.fishingSessionId) {
         const active = await db.user.findFirst({
           where: {

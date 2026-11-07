@@ -1,6 +1,6 @@
 import type { PlayerDto, InventoryDto, InventoryItemDto } from '@fwo/contracts';
 import type { GameConfig } from '@fwo/game-config';
-import { levelForXp } from '@fwo/game-core';
+import { levelForXp, xpForLevel } from '@fwo/game-core';
 import type { Tx } from '../../db.js';
 import { json } from '../../db.js';
 import { assert } from '../../lib/errors.js';
@@ -32,14 +32,23 @@ export async function getPlayer(tx: Tx, userId: string): Promise<PlayerDto> {
     include: { profile: true, wallet: true, admin: true },
   });
   const profile = user.profile!;
+  const level = levelForXp(profile.totalXp);
+  const levelBase = xpForLevel(level);
+  const nextLevelXp = xpForLevel(level + 1);
   return {
     id: user.id,
     email: user.emailNormalized,
     phone: user.phoneE164,
     username: profile.username,
     avatarKey: profile.avatarKey ?? 'angler-1',
-    level: levelForXp(profile.totalXp),
+    level,
     totalXp: profile.totalXp,
+    levelProgress: {
+      currentXp: profile.totalXp - levelBase,
+      requiredXp: nextLevelXp - levelBase,
+      remainingXp: nextLevelXp - profile.totalXp,
+      nextLevel: level + 1,
+    },
     gold: user.wallet!.balanceGold.toString(),
     totalFish: profile.totalFish,
     largestFishG: profile.largestFishG,
@@ -155,7 +164,12 @@ export async function grantItem(
   const existing = await tx.userInventory.findFirst({
     where: { userId, equipmentId: itemId },
   });
-  assert(allowDuplicateEquipment || !existing, 409, 'ALREADY_OWNED', 'Bạn đã sở hữu trang bị này.');
+  assert(
+    allowDuplicateEquipment || !existing,
+    409,
+    'ALREADY_OWNED',
+    'Bạn đã sở hữu trang bị này.',
+  );
   assert(quantity === 1, 422, 'EQUIPMENT_QUANTITY_LIMIT');
   return tx.userInventory.create({
     data: { userId, equipmentId: itemId, quantity: 1 },

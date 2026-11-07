@@ -1,5 +1,5 @@
 import { t as translate, useI18n, localeTag } from '@fwo/ui';
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
@@ -68,6 +68,9 @@ import { EquipmentArt, FishArt, LakeArt } from './art';
 import styles from './app.module.css';
 import { CatchBasket } from './CatchBasket';
 import { PaymentShop } from './payments';
+import { ShopPurchaseModal } from './ShopPurchaseModal';
+import { PlayerAvatar } from './PlayerAvatar';
+import { PlayerProgress } from './PlayerProgress';
 const kinds = () => [
   { value: 'ALL', label: translate('ui.all') },
   { value: 'ROD', label: translate('ui.rod') },
@@ -723,34 +726,7 @@ export function ShopPage() {
   });
   const [filter, setFilter] = useState('ALL');
   const [selected, setSelected] = useState<ShopItemDto | null>(null);
-  const [quantity, setQuantity] = useState('1');
-  const purchaseFormId = useId();
   const toast = useToast();
-  const [purchaseKey, setPurchaseKey] = useState('');
-  const purchase = useMutation({
-    mutationFn: () =>
-      api.request('/shop/orders', {
-        method: 'POST',
-        idempotencyKey: purchaseKey,
-        body: {
-          shopItemId: selected!.id,
-          quantity: Number(quantity),
-          expectedUnitPriceGold: selected!.priceGold,
-          configVersion: query.data!.configVersion,
-          ...(spot && selected!.locationIds.length
-            ? { locationId: spot.id }
-            : {}),
-        },
-      }),
-    onSuccess: async () => {
-      await invalidateGame();
-      setSelected(null);
-      toast(translate('ui.item.added.to.your.bag.enjoy.your'));
-    },
-    onError: () => {
-      void query.refetch();
-    },
-  });
   // The general store lists only goods sold everywhere; terrain goods need their spot.
   const items =
     query.data?.items.filter(
@@ -758,13 +734,6 @@ export function ShopPage() {
         (filter === 'ALL' || i.kind === filter) &&
         (spot || i.locationIds.length === 0),
     ) ?? [];
-  const count =
-    /^\d{1,3}$/.test(quantity) &&
-    Number(quantity) >= 1 &&
-    Number(quantity) <= 100
-      ? Number(quantity)
-      : 0;
-  const total = selected ? BigInt(selected.priceGold) * BigInt(count) : 0n;
   return (
     <>
       <Button
@@ -859,9 +828,6 @@ export function ShopPage() {
                     }
                     onClick={() => {
                       setSelected(i);
-                      setQuantity('1');
-                      setPurchaseKey(crypto.randomUUID());
-                      purchase.reset();
                     }}
                   >
                     {i.owned && i.kind !== 'BAIT'
@@ -883,92 +849,20 @@ export function ShopPage() {
         )}
       </DataState>
       <PaymentShop />
-      <Modal
-        open={!!selected}
-        onClose={() => {
-          if (!purchase.isPending) setSelected(null);
-        }}
-        title={translate('ui.take.this.item.home')}
-        footer={
-          <>
-            <Button
-              variant="secondary"
-              disabled={purchase.isPending}
-              onClick={() => setSelected(null)}
-            >
-              {translate('ui.later')}{' '}
-            </Button>
-            <Button
-              loading={purchase.isPending}
-              disabled={total > BigInt(player.gold)}
-              type="submit"
-              form={purchaseFormId}
-            >
-              {translate('ui.buy.for')}{' '}
-              <CurrencyAmount value={total.toString()} />
-            </Button>
-          </>
-        }
-      >
-        {selected && (
-          <Form
-            id={purchaseFormId}
-            error={purchase.error}
-            onSubmit={(event) => {
-              event.preventDefault();
-              purchase.mutate();
-            }}
-          >
-            <div className={styles.modalArt}>
-              <EquipmentArt kind={selected.kind} live />
-            </div>
-            <h3>{selected.name}</h3>
-            <p className={styles.modalText}>{selected.description}</p>
-            {selected.kind === 'BAIT' && (
-              <FormField
-                label={translate('ui.packs')}
-                required
-                help={translate('ui.value.bait.per.pack', {
-                  value0: selected.grantQuantity,
-                })}
-              >
-                <Input
-                  name="quantity"
-                  type="number"
-                  min={1}
-                  max={100}
-                  value={quantity}
-                  onChange={(e) => {
-                    setQuantity(e.target.value);
-                    setPurchaseKey(crypto.randomUUID());
-                  }}
-                />
-              </FormField>
-            )}
-            <div className={styles.detailGrid}>
-              <div>
-                <small>{translate('ui.total.cost')}</small>
-                <CurrencyAmount value={total.toString()} />
-              </div>
-              <div>
-                <small>{translate('ui.balance.after.purchase')}</small>
-                <CurrencyAmount
-                  value={(BigInt(player.gold) - total > 0n
-                    ? BigInt(player.gold) - total
-                    : 0n
-                  ).toString()}
-                />
-              </div>
-            </div>
-            {total > BigInt(player.gold) && (
-              <Notice tone="warning">
-                {translate('ui.you.need.more.gold.head.to.the')}{' '}
-              </Notice>
-            )}
-            <FormError error={purchase.error} />
-          </Form>
-        )}
-      </Modal>
+      {selected && (
+        <ShopPurchaseModal
+          item={
+            query.data?.items.find((item) => item.id === selected.id) ??
+            selected
+          }
+          configVersion={query.data?.configVersion}
+          locationId={spot?.id}
+          onClose={() => setSelected(null)}
+          onRefresh={() => {
+            void query.refetch();
+          }}
+        />
+      )}
       <Modal
         open={!!selling}
         onClose={() => {
@@ -1243,9 +1137,10 @@ export function LeaderboardPage() {
                     </td>
                     <td>
                       <div className={styles.rankPlayer}>
-                        <span className={styles.avatar}>
-                          {p.username.charAt(0).toUpperCase()}
-                        </span>
+                        <PlayerAvatar
+                          avatarKey={p.avatarKey}
+                          username={p.username}
+                        />
                         <span>
                           {p.username}
                           {p.userId === player.id ? translate('ui.you') : ''}
@@ -1307,12 +1202,7 @@ export function ProfilePage() {
       }),
     onSuccess: setChallenge,
   });
-  const avatarIcons: Record<string, React.ReactNode> = {
-    'angler-1': <Leaf />,
-    'angler-2': <Fish />,
-    'angler-3': <Anchor />,
-    'angler-4': <Sprout />,
-  };
+  const avatarPicker = useRef<HTMLDivElement>(null);
   return (
     <>
       <PageHeader
@@ -1343,14 +1233,27 @@ export function ProfilePage() {
       </div>
       <div className={styles.profileGrid}>
         <Card className={styles.profileCard}>
-          <span className={styles.profileAvatar} aria-hidden="true">
-            {avatarIcons[player.avatarKey] ??
-              player.username.charAt(0).toUpperCase()}
-          </span>
+          <PlayerAvatar
+            avatarKey={avatar}
+            username={player.username}
+            className={styles.profileAvatar}
+          />
           <h2>{player.username}</h2>
-          <Badge tone="uncommon">
-            {translate('ui.angler.level')} {player.level}
-          </Badge>
+          <PlayerProgress player={player} />
+          <Button
+            variant="secondary"
+            onClick={() => {
+              avatarPicker.current?.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+              });
+              avatarPicker.current
+                ?.querySelector('button')
+                ?.focus({ preventScroll: true });
+            }}
+          >
+            {translate('profile.changeAvatar')}
+          </Button>
           <p style={{ marginTop: 20 }}>
             {translate('ui.by.the.lake.since')}{' '}
             {new Date(player.createdAt).toLocaleDateString(localeTag(), {
@@ -1395,17 +1298,23 @@ export function ProfilePage() {
                 <Input value={player.phone} disabled readOnly type="tel" />
               </FormField>
             )}
-            <span className="fwo-eyebrow">
-              {translate('ui.choose.your.signature')}
-            </span>
-            <div className={styles.avatarOptions}>
+            <h3 id="profile-avatar">{translate('profile.avatarTitle')}</h3>
+            <p>{translate('profile.avatarHelp')}</p>
+            <div
+              className={styles.avatarOptions}
+              ref={avatarPicker}
+              role="group"
+              aria-labelledby="profile-avatar"
+            >
               {['angler-1', 'angler-2', 'angler-3', 'angler-4'].map((a, i) => (
                 <Button
                   variant="ghost"
                   key={a}
                   type="button"
                   className={`${styles.avatarOption} ${a === avatar ? styles.avatarSelected : ''}`}
-                  aria-label={`Avatar ${i + 1}`}
+                  aria-label={translate('profile.avatarOption', {
+                    number: i + 1,
+                  })}
                   aria-pressed={a === avatar}
                   onClick={() => setAvatar(a)}
                 >

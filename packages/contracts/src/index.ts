@@ -124,6 +124,12 @@ export const playerSchema = z.strictObject({
   avatarKey: z.string().max(100),
   level: z.number().int().min(1),
   totalXp: z.number().int().nonnegative(),
+  levelProgress: z.strictObject({
+    currentXp: z.number().int().nonnegative(),
+    requiredXp: z.number().int().positive(),
+    remainingXp: z.number().int().nonnegative(),
+    nextLevel: z.number().int().min(2),
+  }),
   gold: moneySchema,
   totalFish: z.number().int().nonnegative(),
   largestFishG: z.number().int().nonnegative(),

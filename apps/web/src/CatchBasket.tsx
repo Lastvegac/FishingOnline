@@ -21,7 +21,9 @@ import { api, invalidateGame, queryClient } from './data';
 import { FishArt } from './art';
 import styles from './app.module.css';
 
-export function CatchBasket() {
+export function CatchBasket({
+  onContinueFishing,
+}: { onContinueFishing?: () => void } = {}) {
   const { t } = useI18n();
   const navigate = useNavigate();
   const toast = useToast();
@@ -66,9 +68,11 @@ export function CatchBasket() {
         title={t('exchange.title')}
         description={t('exchange.description')}
         action={
-          <Button variant="secondary" onClick={() => navigate('/play/shop')}>
-            {t('exchange.shop')}
-          </Button>
+          !onContinueFishing && (
+            <Button variant="secondary" onClick={() => navigate('/play/shop')}>
+              {t('exchange.shop')}
+            </Button>
+          )
         }
       />
       {budget && (
@@ -85,9 +89,9 @@ export function CatchBasket() {
         <ErrorState error={query.error} retry={() => void query.refetch()} />
       ) : items.length ? (
         <>
-          <div className={styles.cardGrid}>
+          <div className={styles.catchGrid}>
             {items.map((fish) => (
-              <Card key={fish.id} className={styles.itemCard}>
+              <Card key={fish.id} className={styles.catchCard}>
                 <div className={styles.itemArt}>
                   <FishArt
                     slug={fish.fish.slug}
@@ -97,7 +101,7 @@ export function CatchBasket() {
                 <RarityBadge rarity={fish.fish.rarity} />
                 <h3>{fish.fish.name}</h3>
                 <p>{formatWeight(fish.weightG)}</p>
-                <div className={styles.itemFooter}>
+                <div className={styles.catchFooter}>
                   <CurrencyAmount value={fish.gold} />
                   <Button
                     disabled={exchange.isPending || !canExchange(fish.gold)}
@@ -108,8 +112,8 @@ export function CatchBasket() {
                   >
                     {t('exchange.action')}
                   </Button>
+                  {!canExchange(fish.gold) && <p>{t('exchange.tomorrow')}</p>}
                 </div>
-                {!canExchange(fish.gold) && <p>{t('exchange.tomorrow')}</p>}
               </Card>
             ))}
           </div>
@@ -128,8 +132,14 @@ export function CatchBasket() {
           title={t('exchange.empty')}
           description={t('exchange.emptyDescription')}
           action={
-            <Button onClick={() => navigate('/play/fishing')}>
-              {t('exchange.fish')}
+            <Button
+              onClick={() =>
+                onContinueFishing
+                  ? onContinueFishing()
+                  : navigate('/play/fishing')
+              }
+            >
+              {t(onContinueFishing ? 'ui.keep.fishing' : 'exchange.fish')}
             </Button>
           }
         />

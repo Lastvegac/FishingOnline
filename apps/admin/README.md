@@ -20,7 +20,7 @@ Admin ở `http://localhost:5174`, proxy `/api` tới API 3001, đổi bằng `V
 - Users: xem tối đa 100 tài khoản mới nhất; Support/Super Admin thu hồi session, Super Admin thay status với lý do. Không hiển thị password/token.
 - Ledger/audit chỉ đọc, tối đa 100 mục mới nhất; dialog xem bản ghi đầy đủ.
 - Sổ cái hiển thị tên hiện tại và ID người chơi sở hữu ví; tìm theo tên/ID người chơi/ID ví, chi tiết có ID ví và tham chiếu. Chỉ SUPER_ADMIN/SUPPORT được đọc. Không lấy danh sách tài khoản giới hạn 100 mục để suy chủ ví.
-- Thẻ thời trang dùng tên/slot/cách mở khóa Việt–Anh; giữ mã để tra cấu hình, giá Gold/Kim cương/miễn phí đúng loại và action xuống hàng riêng. Loại trang bị dùng nhãn dịch; bộ lọc đơn hàng có placeholder UUID cho ID người chơi.
+- Thẻ thời trang dùng tên/slot/cách mở khóa Việt–Anh, giá Gold/Kim cương/miễn phí đúng loại và icon bút sửa ở góc phải trên. Vật phẩm/bộ sưu tập/sự kiện/pass dùng biểu mẫu có nhãn, chọn mẫu có sẵn, lịch theo múi giờ thiết bị và mốc quà thêm/xóa; mã nội bộ/version tự quản lý, không yêu cầu nhập JSON. Lý do thay đổi, RBAC/audit, optimistic version và idempotency giữ nguyên. Loại trang bị dùng nhãn dịch; bộ lọc đơn hàng có placeholder UUID cho ID người chơi.
 
 - Điều hướng chia nhóm theo nghiệp vụ, lọc theo vai trò ([navigation.ts](src/navigation.ts)); tiêu đề tab/breadcrumb lấy từ cùng định nghĩa. Favicon ở `public/icon.svg`.
 - Bảng dùng chung `DataTable`: sắp xếp theo cột, tìm kiếm không dấu (client-side trên tối đa 100 bản ghi đã tải), trạng thái rỗng/không có kết quả. Error boundary theo trang.

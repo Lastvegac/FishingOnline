@@ -181,14 +181,23 @@ test('đăng ký, reload, responsive và câu cá thực lưu đúng một phầ
   ).toBeVisible();
   await expect(page.getByTestId('catch-result')).toContainText('Chiều dài:');
   await page.getByRole('button', { name: 'Mở giỏ cá', exact: true }).click();
-  await expect(page).toHaveURL(/\/play\/inventory\?tab=catches$/);
+  await expect(page).toHaveURL(/\/play\/fishing\?location=/);
+  const basket = page.getByRole('dialog', {
+    name: 'Xem giỏ cá tại hồ',
+    exact: true,
+  });
+  await expect(basket).toBeVisible();
   await page
     .getByRole('region', { name: 'Giỏ cá đổi Gold' })
     .getByRole('button', { name: 'Đổi cá', exact: true })
     .click();
   await page
-    .getByRole('dialog')
+    .getByRole('dialog', { name: 'Đổi cá sang Gold?', exact: true })
     .getByRole('button', { name: /Xác nhận đổi/ })
+    .click();
+  await expect(basket).toBeVisible();
+  await basket
+    .getByRole('button', { name: 'Câu tiếp nhé', exact: true })
     .click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.goto('/play/profile');
